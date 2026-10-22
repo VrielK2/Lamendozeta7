@@ -1,0 +1,2780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Reino de las Sombras</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #05030b;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+button {
+    font-family: inherit;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#game {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at center, #251044, #07040e 70%);
+}
+
+#world {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4000px;
+    height: 4000px;
+
+    background-color: #0b0815;
+
+    background-image:
+        linear-gradient(rgba(95, 61, 145, .18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(95, 61, 145, .18) 1px, transparent 1px);
+
+    background-size: 80px 80px;
+
+    transform-origin: 0 0;
+}
+
+.star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #fff;
+    opacity: .5;
+}
+
+#player {
+    position: fixed;
+    width: 60px;
+    height: 75px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 500;
+    pointer-events: none;
+}
+
+.player-body {
+    position: absolute;
+    width: 45px;
+    height: 50px;
+    left: 7px;
+    top: 22px;
+    border-radius: 50% 50% 20% 20%;
+    background: linear-gradient(#a74dff, #34105f);
+    box-shadow: 0 0 20px #913cff;
+}
+
+.player-head {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    left: 15px;
+    top: 0;
+    border-radius: 50%;
+    background: #efbd98;
+}
+
+.player-head::after {
+    content: "";
+    position: absolute;
+    left: -2px;
+    top: -5px;
+    width: 32px;
+    height: 14px;
+    border-radius: 50% 50% 20% 20%;
+    background: #191027;
+}
+
+.player-wand {
+    position: absolute;
+    width: 42px;
+    height: 5px;
+    right: -30px;
+    top: 40px;
+    border-radius: 5px;
+    background: #b77a3b;
+    transform: rotate(-25deg);
+    box-shadow: 0 0 10px #ffc15c;
+}
+
+.player-hit {
+    animation: playerHit .2s;
+}
+
+@keyframes playerHit {
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: .15;
+    }
+}
+
+.enemy {
+    position: absolute;
+    width: 70px;
+    height: 85px;
+    transform: translate(-50%, -50%);
+    z-index: 300;
+}
+
+.enemy-body {
+    position: absolute;
+    width: 55px;
+    height: 60px;
+    left: 7px;
+    top: 17px;
+    border-radius: 50% 50% 35% 35%;
+    background:
+        radial-gradient(
+            circle at 50% 35%,
+            #9a35ff,
+            #25083f
+        );
+    box-shadow: 0 0 20px #8d2dff;
+}
+
+.enemy-eye {
+    position: absolute;
+    top: 34px;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ff315f;
+    box-shadow: 0 0 10px red;
+}
+
+.enemy-eye.left {
+    left: 18px;
+}
+
+.enemy-eye.right {
+    right: 18px;
+}
+
+.enemy-name {
+    position: absolute;
+    top: -25px;
+    width: 100%;
+    text-align: center;
+    font-size: 11px;
+    color: #ff9bd0;
+    white-space: nowrap;
+}
+
+.enemy-level {
+    color: #d8a7ff;
+}
+
+.enemy-bar {
+    position: absolute;
+    left: 5px;
+    top: -9px;
+    width: 60px;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #170b20;
+}
+
+.enemy-hp {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff2148, #ff7185);
+}
+
+.projectile {
+    position: absolute;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    z-index: 450;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.fireball {
+    background: #ff5a1f;
+    box-shadow:
+        0 0 12px #ff5a1f,
+        0 0 30px #ff5a1f;
+}
+
+.iceball {
+    background: #64eaff;
+    box-shadow:
+        0 0 12px #64eaff,
+        0 0 30px #64eaff;
+}
+
+.lightning-ball {
+    background: #fff000;
+    box-shadow:
+        0 0 15px #fff000,
+        0 0 35px #fff000;
+}
+
+.damage {
+    position: fixed;
+    z-index: 3000;
+    color: #ffe66d;
+    font-weight: bold;
+    font-size: 21px;
+    pointer-events: none;
+    animation: damageFloat .7s forwards;
+}
+
+@keyframes damageFloat {
+    from {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateY(-50px) scale(1.25);
+        opacity: 0;
+    }
+}
+
+.slash {
+    position: fixed;
+    width: 110px;
+    height: 110px;
+    left: 50%;
+    top: 50%;
+    border: 5px solid #fff;
+    border-radius: 50%;
+    z-index: 600;
+    pointer-events: none;
+    animation: slash .25s forwards;
+}
+
+@keyframes slash {
+    from {
+        transform: translate(-50%, -50%) scale(.2) rotate(0deg);
+        opacity: 1;
+    }
+
+    to {
+        transform: translate(-50%, -50%) scale(1.2) rotate(100deg);
+        opacity: 0;
+    }
+}
+
+.effect-ring {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 100px;
+    height: 100px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 700;
+    animation: ring .4s forwards;
+}
+
+@keyframes ring {
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(.3);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(2);
+    }
+}
+
+#hud {
+    position: fixed;
+    left: 15px;
+    top: 15px;
+    width: 300px;
+    z-index: 1000;
+}
+
+#levelText {
+    margin-bottom: 8px;
+    color: #dca4ff;
+    font-size: 24px;
+    font-weight: bold;
+    text-shadow: 0 0 12px #913cff;
+}
+
+.stat-label {
+    font-size: 12px;
+    margin-bottom: 3px;
+    color: #ddd;
+}
+
+.bar {
+    width: 100%;
+    height: 17px;
+    margin-bottom: 7px;
+    overflow: hidden;
+    border: 2px solid #423752;
+    border-radius: 10px;
+    background: #15111d;
+}
+
+.fill {
+    height: 100%;
+    width: 0%;
+    transition: width .15s;
+}
+
+#hpFill {
+    background: linear-gradient(90deg, #e31837, #ff6d80);
+}
+
+#manaFill {
+    background: linear-gradient(90deg, #205eff, #6cc4ff);
+}
+
+#xpFill {
+    background: linear-gradient(90deg, #7627ff, #d26eff);
+}
+
+#hudInfo {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #452b63;
+    border-radius: 8px;
+    background: rgba(8, 4, 18, .8);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+#rightPanel {
+    position: fixed;
+    right: 15px;
+    top: 15px;
+    width: 285px;
+    max-height: calc(100vh - 30px);
+    overflow-y: auto;
+    padding: 14px;
+    z-index: 1000;
+    border: 2px solid #6338a0;
+    border-radius: 12px;
+    background: rgba(8, 4, 19, .94);
+}
+
+#rightPanel h2 {
+    margin: 0 0 10px;
+    color: #d28aff;
+    font-size: 20px;
+}
+
+.panel-section {
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #38264d;
+}
+
+.panel-section:last-child {
+    border-bottom: none;
+}
+
+.action-button {
+    width: 100%;
+    margin: 4px 0;
+    padding: 9px;
+    color: white;
+    cursor: pointer;
+    border: 1px solid #56338a;
+    border-radius: 7px;
+    background: #211335;
+}
+
+.action-button:hover {
+    border-color: #c181ff;
+    box-shadow: 0 0 12px #7134c9;
+}
+
+.action-button:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+#controls {
+    position: fixed;
+    left: 50%;
+    bottom: 15px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 1100;
+}
+
+.control {
+    min-width: 105px;
+    height: 60px;
+    padding: 5px 10px;
+    color: white;
+    cursor: pointer;
+    border: 2px solid #6334a3;
+    border-radius: 10px;
+    background: rgba(22, 12, 44, .95);
+}
+
+.control:hover {
+    border-color: #c181ff;
+    box-shadow: 0 0 15px #853fff;
+}
+
+.control strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #d9a8ff;
+}
+
+#pauseButton {
+    position: fixed;
+    right: 315px;
+    bottom: 20px;
+    z-index: 1200;
+    padding: 10px 18px;
+    color: white;
+    cursor: pointer;
+    border: 1px solid #7346a6;
+    border-radius: 8px;
+    background: #211235;
+}
+
+#message {
+    position: fixed;
+    left: 50%;
+    top: 27%;
+    transform: translate(-50%, -50%);
+    z-index: 4000;
+    pointer-events: none;
+    color: #e4c4ff;
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 0 18px #913cff;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 6000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(43, 17, 76, .98),
+            rgba(3, 1, 10, .99) 75%
+        );
+}
+
+.menu-title {
+    margin: 0 0 5px;
+    color: #d99cff;
+    font-size: clamp(42px, 7vw, 78px);
+    text-align: center;
+    text-shadow:
+        0 0 20px #8b32ff,
+        0 0 50px #5d1ca7;
+}
+
+.menu-subtitle {
+    margin-bottom: 30px;
+    color: #bba8ca;
+}
+
+.menu-button {
+    width: 300px;
+    margin: 6px;
+    padding: 15px;
+    color: white;
+    cursor: pointer;
+    border: 2px solid #6e3ca8;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #28143e, #12091e);
+    font-size: 18px;
+    transition: .2s;
+}
+
+.menu-button:hover {
+    transform: scale(1.04);
+    border-color: #d29bff;
+    box-shadow: 0 0 20px #853fff;
+}
+
+.menu-info {
+    margin-top: 20px;
+    color: #89799b;
+    font-size: 13px;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 7000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(3, 1, 9, .88);
+}
+
+.modal-box {
+    width: min(500px, 90vw);
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 25px;
+    border: 2px solid #7040a8;
+    border-radius: 15px;
+    background: #10091d;
+    box-shadow: 0 0 40px rgba(128, 45, 220, .4);
+}
+
+.modal-box h2 {
+    margin-top: 0;
+    color: #d99cff;
+}
+
+.close-button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 11px;
+    color: white;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background: #6334a3;
+}
+
+#gameOver {
+    position: fixed;
+    inset: 0;
+    z-index: 8000;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(3, 1, 10, .96);
+}
+
+#gameOver h1 {
+    margin: 0 0 15px;
+    color: #d278ff;
+    font-size: clamp(40px, 7vw, 65px);
+    text-shadow: 0 0 30px #8b32ff;
+}
+
+#pauseScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 7500;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(5, 2, 12, .82);
+}
+
+#pauseScreen h1 {
+    color: #d89cff;
+}
+
+#saveStatus {
+    position: fixed;
+    right: 15px;
+    bottom: 15px;
+    z-index: 9000;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(20, 10, 30, .9);
+    color: #bfa9ce;
+    font-size: 12px;
+}
+
+@media (max-width: 800px) {
+
+    #hud {
+        width: 220px;
+        transform: scale(.8);
+        transform-origin: top left;
+    }
+
+    #rightPanel {
+        width: 220px;
+        transform: scale(.8);
+        transform-origin: top right;
+    }
+
+    #controls {
+        bottom: 10px;
+    }
+
+    .control {
+        min-width: 80px;
+        height: 55px;
+    }
+
+    #pauseButton {
+        display: none;
+    }
+}
+
+
+/* Sistemas nuevos: oleadas, enemigos especiales y mascotas */
+.wave-line {
+    margin: 0 0 9px;
+    color: #ffd76e;
+    font-size: 19px;
+    font-weight: 800;
+    text-shadow: 0 0 12px rgba(255, 174, 52, .65);
+}
+.enemy-fast .enemy-body {
+    background: radial-gradient(circle at 50% 35%, #ffb12d, #692407);
+    box-shadow: 0 0 20px #ff8a24;
+}
+.enemy-fast .enemy-eye { background: #fff6a0; box-shadow: 0 0 10px #ffab2e; }
+.enemy-brute .enemy-body {
+    background: radial-gradient(circle at 50% 35%, #e94b62, #4d071c);
+    box-shadow: 0 0 22px #ed315c;
+}
+.enemy-elite .enemy-body {
+    background: radial-gradient(circle at 50% 35%, #4fffe1, #064e62);
+    box-shadow: 0 0 24px #20e5e1;
+}
+.enemy-boss { transform: translate(-50%, -50%) scale(1.45); z-index: 340; }
+.enemy-boss .enemy-body {
+    background: radial-gradient(circle at 50% 35%, #ffdc58, #821b15 72%);
+    box-shadow: 0 0 28px #ff3d2e, 0 0 50px rgba(255, 61, 46, .6);
+}
+.enemy-boss .enemy-name { color: #fff1a3; font-size: 13px; font-weight: 900; }
+.pet-companion {
+    position: absolute;
+    z-index: 480;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    font-size: 27px;
+    filter: drop-shadow(0 0 9px #d6a0ff);
+    pointer-events: none;
+    transition: left .1s linear, top .1s linear;
+}
+#waveShop { z-index: 6500; padding: 22px; overflow-y: auto; }
+.shop-heading { margin: 0 0 6px; color: #ffe09a; font-size: clamp(30px, 5vw, 48px); text-align: center; text-shadow: 0 0 18px #d77b35; }
+.shop-summary { margin: 0 0 18px; color: #ddd0ed; text-align: center; line-height: 1.6; }
+.shop-grid { width: min(880px, 96vw); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.shop-card { padding: 15px; border: 1px solid #56347d; border-radius: 12px; background: rgba(13, 7, 26, .92); }
+.shop-card h2 { margin: 0 0 7px; color: #d9a8ff; font-size: 19px; }
+.shop-card p { margin: 0 0 8px; color: #c4b3d5; font-size: 13px; line-height: 1.45; }
+.shop-action { width: 100%; margin: 4px 0; padding: 10px; border: 1px solid #6d469c; border-radius: 8px; color: white; background: #24143a; cursor: pointer; text-align: left; }
+.shop-action:hover { border-color: #e0b5ff; background: #35204e; }
+.shop-action:disabled { opacity: .4; cursor: not-allowed; }
+.shop-footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+.shop-footer .menu-button { width: min(300px, 90vw); }
+@media (max-width: 620px) {
+    #waveShop { justify-content: flex-start; padding: 12px 8px; }
+    .shop-grid { grid-template-columns: 1fr; }
+    .shop-card { padding: 12px; }
+    #hud { transform: scale(.72); }
+    #rightPanel { transform: scale(.72); }
+    #controls { gap: 4px; }
+    .control { min-width: 73px; padding: 4px; font-size: 11px; }
+}
+
+
+/* Adaptación móvil: añade controles táctiles sin alterar las reglas del juego. */
+#panelToggle,
+#hudToggle,
+#mobileJoystick {
+    display: none;
+}
+
+@media (max-width: 800px) {
+    html, body, #game {
+        width: 100%;
+        height: 100%;
+        height: 100dvh;
+        overscroll-behavior: none;
+    }
+
+    #panelToggle {
+        display: block;
+        position: fixed;
+        top: max(9px, env(safe-area-inset-top));
+        right: max(9px, env(safe-area-inset-right));
+        z-index: 1200;
+        padding: 9px 11px;
+        border: 1px solid #7346a6;
+        border-radius: 9px;
+        color: white;
+        background: rgba(22, 12, 44, .96);
+        font: inherit;
+        font-size: 12px;
+        touch-action: manipulation;
+    }
+
+    #hudToggle {
+        display: block;
+        position: fixed;
+        top: max(8px, env(safe-area-inset-top));
+        left: max(8px, env(safe-area-inset-left));
+        z-index: 1400;
+        padding: 8px 10px;
+        border: 1px solid #7346a6;
+        border-radius: 9px;
+        color: white;
+        background: rgba(22, 12, 44, .96);
+        font: inherit;
+        font-size: 11px;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    body.mobile-hud-hidden #hud {
+        display: none !important;
+    }
+
+    #rightPanel {
+        display: none;
+    }
+
+    body.mobile-panel-open #rightPanel {
+        display: block;
+        position: fixed;
+        top: max(53px, calc(env(safe-area-inset-top) + 45px));
+        right: max(8px, env(safe-area-inset-right));
+        width: min(300px, 86vw);
+        max-height: calc(100dvh - 68px - env(safe-area-inset-top));
+        padding: 12px;
+        transform: none;
+        transform-origin: top right;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #mobileJoystick {
+        display: block;
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left));
+        bottom: max(13px, env(safe-area-inset-bottom));
+        width: 116px;
+        height: 116px;
+        border: 2px solid rgba(183, 122, 255, .75);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(95, 52, 145, .46), rgba(18, 9, 34, .76));
+        box-shadow: inset 0 0 18px rgba(149, 76, 255, .2), 0 0 14px rgba(111, 54, 174, .18);
+        z-index: 1300;
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    #mobileJoystick::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: rgba(222, 191, 255, .72);
+        transform: translate(-50%, -50%);
+    }
+
+    #mobileStick {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 45px;
+        height: 45px;
+        border: 2px solid #d3a5ff;
+        border-radius: 50%;
+        background: linear-gradient(145deg, rgba(176, 107, 255, .95), rgba(69, 32, 113, .95));
+        box-shadow: 0 0 13px rgba(166, 93, 255, .65);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+
+    #controls {
+        left: auto;
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(13px, env(safe-area-inset-bottom));
+        transform: none;
+        display: flex;
+        gap: 3px;
+        z-index: 1300;
+    }
+
+    .control {
+        width: clamp(54px, 18vw, 72px);
+        min-width: 0;
+        height: 58px;
+        padding: 4px 2px;
+        border-width: 1px;
+        border-radius: 9px;
+        font-size: 10px;
+        line-height: 1.1;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .control strong {
+        margin-bottom: 5px;
+        font-size: 10px;
+        line-height: 1.15;
+    }
+
+    #hud {
+        top: max(42px, calc(env(safe-area-inset-top) + 34px));
+        left: max(8px, env(safe-area-inset-left));
+        width: 220px;
+        transform: scale(.72);
+        transform-origin: top left;
+        pointer-events: none;
+    }
+
+    #saveStatus {
+        right: 8px;
+        bottom: calc(82px + env(safe-area-inset-bottom));
+        font-size: 10px;
+        padding: 5px 7px;
+    }
+
+    .overlay {
+        padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .menu-button {
+        width: min(300px, 88vw);
+    }
+
+    #infoModal {
+        padding: 12px;
+    }
+
+    .modal-box {
+        max-height: 88dvh;
+        padding: 18px;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 370px) {
+    #mobileJoystick {
+        width: 104px;
+        height: 104px;
+        left: max(8px, env(safe-area-inset-left));
+        bottom: max(11px, env(safe-area-inset-bottom));
+    }
+
+    #mobileStick {
+        width: 41px;
+        height: 41px;
+    }
+
+    #controls {
+        right: max(6px, env(safe-area-inset-right));
+        gap: 2px;
+    }
+
+    .control {
+        width: 17.5vw;
+        height: 55px;
+        font-size: 9px;
+    }
+
+    .control strong {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 800px) and (orientation: landscape) {
+    #hudToggle {
+        top: max(5px, env(safe-area-inset-top));
+        padding: 6px 8px;
+    }
+
+    #panelToggle {
+        top: max(5px, env(safe-area-inset-top));
+        padding: 6px 8px;
+    }
+
+    #mobileJoystick {
+        width: 88px;
+        height: 88px;
+        bottom: max(7px, env(safe-area-inset-bottom));
+    }
+
+    #mobileStick {
+        width: 37px;
+        height: 37px;
+    }
+
+    #hud {
+        top: max(34px, calc(env(safe-area-inset-top) + 28px));
+        transform: scale(.52);
+    }
+
+    #controls {
+        bottom: max(7px, env(safe-area-inset-bottom));
+    }
+
+    .control {
+        height: 48px;
+    }
+}
+
+/* Algunos móviles superan los 800 px de ancho al girarse. Conservamos
+   los controles táctiles también en ese formato horizontal. */
+@media (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) and (hover: none) {
+    #hudToggle, #panelToggle {
+        display: block;
+        position: fixed;
+        top: max(5px, env(safe-area-inset-top));
+        z-index: 1400;
+        padding: 6px 9px;
+        font-size: 11px;
+        touch-action: manipulation;
+    }
+
+    #hudToggle { left: max(8px, env(safe-area-inset-left)); }
+    #panelToggle { right: max(8px, env(safe-area-inset-right)); }
+
+    #hud {
+        display: block;
+        top: max(35px, calc(env(safe-area-inset-top) + 28px));
+        left: max(8px, env(safe-area-inset-left));
+        width: 220px;
+        transform: scale(.50);
+        transform-origin: top left;
+        pointer-events: none;
+    }
+
+    body.mobile-hud-hidden #hud { display: none !important; }
+
+    #rightPanel { display: none; }
+    body.mobile-panel-open #rightPanel {
+        display: block;
+        position: fixed;
+        top: max(42px, calc(env(safe-area-inset-top) + 35px));
+        right: max(8px, env(safe-area-inset-right));
+        width: min(320px, 42vw);
+        max-height: calc(100dvh - 52px - env(safe-area-inset-top));
+        padding: 10px;
+        transform: none;
+        transform-origin: top right;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #mobileJoystick {
+        display: block;
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left));
+        bottom: max(7px, env(safe-area-inset-bottom));
+        width: 88px;
+        height: 88px;
+        z-index: 1300;
+        border: 2px solid rgba(183, 122, 255, .75);
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(95, 52, 145, .46), rgba(18, 9, 34, .76));
+        box-shadow: inset 0 0 18px rgba(149, 76, 255, .2), 0 0 14px rgba(111, 54, 174, .18);
+        touch-action: none;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    #mobileJoystick::before {
+        content: "";
+        position: absolute;
+        left: 50%; top: 50%; width: 5px; height: 5px;
+        border-radius: 50%; background: rgba(222, 191, 255, .72);
+        transform: translate(-50%, -50%);
+    }
+
+    #mobileStick {
+        position: absolute; left: 50%; top: 50%;
+        width: 37px; height: 37px;
+        border: 2px solid #d3a5ff; border-radius: 50%;
+        background: linear-gradient(145deg, rgba(176, 107, 255, .95), rgba(69, 32, 113, .95));
+        box-shadow: 0 0 13px rgba(166, 93, 255, .65);
+        transform: translate(-50%, -50%); pointer-events: none;
+    }
+
+    #controls {
+        left: auto;
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(7px, env(safe-area-inset-bottom));
+        transform: none;
+        display: flex;
+        gap: 4px;
+        z-index: 1300;
+        touch-action: none;
+    }
+
+    .control {
+        width: clamp(64px, 8vw, 82px);
+        min-width: 0;
+        height: 48px;
+        padding: 4px 3px;
+        border-width: 1px;
+        border-radius: 9px;
+        font-size: 10px;
+        line-height: 1.1;
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .control strong { margin-bottom: 3px; font-size: 10px; }
+    #saveStatus { right: 8px; bottom: calc(62px + env(safe-area-inset-bottom)); font-size: 10px; padding: 5px 7px; }
+    #pauseButton { display: none; }
+    .overlay { padding: 10px 12px; overflow-y: auto; }
+    .menu-button { width: min(300px, 80vw); }
+}
+
+/* Ampliación del combate: conserva la paleta y el escenario originales. */
+#world { touch-action: none; }
+button { -webkit-tap-highlight-color: transparent; }
+.action-button.selected, .shop-action.selected { border-color: #d6a3ff; background: #3a2056; box-shadow: inset 3px 0 #d6a3ff; }
+.technique-note { color: #c8b4da; font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.stat-label { display: flex; justify-content: space-between; }
+.stat-value { color: #d5c9e0; font-variant-numeric: tabular-nums; }
+#unlockInfo { white-space: pre-line; line-height: 1.7; }
+#bonusInfo, #nextRebirthInfo, #recordInfo { font-size: 11px; line-height: 1.6; color: #cfb4e9; }
+#nextRebirthInfo { color: #ffe09a; }
+#message { width: min(640px, 88vw); font-size: clamp(17px, 2.6vw, 28px); }
+.menu-info { text-align: center; max-width: min(660px, 92vw); line-height: 1.6; }
+#waveShop { justify-content: flex-start; padding-top: max(24px, env(safe-area-inset-top)); }
+#waveShop .shop-grid, #waveShop .shop-footer { flex-shrink: 0; }
+.shop-action { line-height: 1.45; }
+.menu-button:disabled { opacity: .45; cursor: not-allowed; }
+.menu-button:disabled:hover { transform: none; box-shadow: none; }
+.rebirth-confirm { border: 1px solid #dbb0ff; background: #6334a3; cursor: pointer; line-height: 1.5; }
+#petUpgrade { border-color: #d49dff; background: #402052; }
+#petNextInfo { color: #a9a0b6; font-size: 11px; }
+.shop-preview { width: min(880px, 96vw); margin: 12px 0 0; padding: 10px 14px; background: #1e112f; border: 1px solid #624282; border-radius: 10px; color: #d4c5e2; font-size: 13px; line-height: 1.6; }
+.shop-preview p { margin: 3px 0; }
+.control { position: relative; overflow: hidden; }
+.control::after { content: ""; position: absolute; inset: 0; background: rgba(151, 91, 231, .2); transform: scaleY(var(--cooldown, 0)); transform-origin: bottom; pointer-events: none; }
+.control-hint { font-size: 9px; letter-spacing: .02em; }
+.control strong { position: relative; z-index: 1; }
+#mobilePause { display: none; }
+#bossHud { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); width: min(380px, 32vw); z-index: 1050; padding: 9px 12px; border: 1px solid #f6b764; border-radius: 9px; background: rgba(24, 9, 30, .94); pointer-events: none; text-align: center; }
+#bossName { color: #ffe1a2; font-size: 12px; font-weight: bold; }
+.boss-bar { height: 10px; margin: 6px 0 4px; overflow: hidden; background: #381024; border-radius: 6px; }
+#bossFill { height: 100%; width: 100%; background: linear-gradient(90deg, #d92c68, #ffc05e); transition: width .12s linear; }
+#bossPhase { color: #cfb4d4; font-size: 10px; line-height: 1.3; }
+.enemy-body { transition: filter .12s, opacity .12s; }
+.enemy-phased .enemy-body { opacity: .52; box-shadow: 0 0 30px #ffac49, 0 0 4px 2px #ffe2a4; border: 2px solid #ffd08c; }
+.enemy-phased .enemy-eye { opacity: 1; box-shadow: 0 0 12px #fff; }
+.enemy-phased .enemy-name::before { content: "◌ "; color: #ffcf72; }
+.enemy-slime .enemy-body { top: 30px; height: 46px; border-radius: 50% 50% 35% 35%; background: radial-gradient(circle at 40% 25%, #aeffb7, #168649 55%, #095129); box-shadow: 0 0 22px #39c86d; border-bottom: 4px solid #7cf3a2; }
+.enemy-slime .enemy-eye { top: 16px; background: #08261d; box-shadow: none; }
+.enemy-hexer .enemy-body { border-radius: 55% 55% 10% 10%; background: linear-gradient(30deg, #39205d, #b873e8); box-shadow: 0 0 24px #a277ff; }
+.enemy-hexer .enemy-body::before { content: "✦"; position: absolute; top: -30px; left: 13px; font-size: 34px; color: #e2b1ff; }
+.enemy-sentinel .enemy-body { border: 5px solid #c2cbea; background: linear-gradient(135deg, #808aab, #253451); border-radius: 12px 12px 26px 26px; box-shadow: 0 0 18px #899bb9; }
+.enemy-sentinel:not(.enemy-unshielded) .enemy-body::after { content: "⛨"; position: absolute; top: 25px; left: 12px; color: #cce5ff; font-size: 27px; }
+.enemy-sentinel.enemy-unshielded .enemy-body { border-color: #665174; }
+.enemy-bomber .enemy-body { background: radial-gradient(circle, #ffe5a0, #fa8634 42%, #721e17); box-shadow: 0 0 28px #ff8531; border-radius: 50%; }
+.enemy-bomber .enemy-body::after { content: "✹"; position: absolute; top: -16px; left: 16px; color: #ffd98c; font-size: 26px; }
+.enemy-shaman .enemy-body { background: linear-gradient(#53d3b9, #06414c); box-shadow: 0 0 22px #58e8cd; border-radius: 22% 22% 45% 45%; }
+.enemy-shaman .enemy-body::before { content: "+"; position: absolute; top: -23px; left: 14px; font-size: 33px; color: #b1ffe0; }
+.boss-matriarca .enemy-body { background: radial-gradient(circle at 40% 30%, #dbffb6, #3ba659 50%, #174f4e); box-shadow: 0 0 35px #65e99b; }
+.boss-nigromante .enemy-body { background: radial-gradient(circle at 40% 30%, #d7b8ff, #6d2aaf 50%, #1b103b); box-shadow: 0 0 35px #aa69ff; border: 2px solid #b192ff; }
+.enemy-enraged .enemy-body { outline: 2px solid #ff677f; outline-offset: 4px; }
+.enemy-frozen .enemy-body { filter: brightness(1.5) saturate(.4); outline: 3px solid #85f0ff; box-shadow: 0 0 30px #58bfff; opacity: 1; }
+.enemy-stunned .enemy-body { outline: 2px dashed #fff078; filter: brightness(1.3); }
+.enemy-burning:not(.enemy-frozen) .enemy-body { box-shadow: 0 0 26px #ff652b; }
+.enemy-status { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: bold; color: #adf4ff; text-shadow: 0 1px 3px #000; }
+.world-ring { position: absolute; z-index: 470; pointer-events: none; border: 3px solid var(--effect-color); border-radius: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 18px var(--effect-color), inset 0 0 15px color-mix(in srgb, var(--effect-color) 25%, transparent); }
+.combat-beam { position: absolute; z-index: 490; pointer-events: none; overflow: visible; filter: drop-shadow(0 0 5px currentColor); }
+.combat-beam polyline { fill: none; stroke: currentColor; stroke-width: 4; stroke-linejoin: round; }
+.attack-warning { position: absolute; z-index: 250; pointer-events: none; border: 2px dashed #ff7d8e; border-radius: 50%; transform: translate(-50%, -50%); background: rgba(255, 53, 94, .13); box-shadow: inset 0 0 30px rgba(255, 74, 93, .32); }
+.attack-warning::after { content: "!"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-weight: 900; color: #ffb4bd; font-size: 25px; opacity: calc(.3 + var(--warning-progress, 0) * .7); }
+.attack-warning.warning-line { height: 44px; border-radius: 7px; transform-origin: left center; border-style: dashed; }
+.enemy-shaman + .attack-warning { border-color: #73eac9; }
+.hostile-orb { background: radial-gradient(circle at 35% 30%, #fff1f7, var(--orb-color) 45%, #611b58); box-shadow: 0 0 14px var(--orb-color), 0 0 3px 2px #ffcaec; border: 1px solid #ffb5df; }
+.arcane-bolt { background: #f4d9ff; box-shadow: 0 0 13px var(--orb-color); }
+.ice-shard { border: 2px solid #d7ffff; box-shadow: 0 0 22px #70deff; }
+.meteor-mark { position: absolute; transform: translate(-50%, -50%); border: 3px solid #ffbd72; border-radius: 50%; background: rgba(255, 117, 38, .13); color: #ffd2a1; font-size: 80px; display: grid; place-items: center; z-index: 260; pointer-events: none; }
+.world-float { position: absolute; z-index: 520; font-size: 15px; font-weight: bold; white-space: nowrap; text-shadow: 0 2px 3px #090410; pointer-events: none; animation: worldFloat .7s linear forwards; }
+@keyframes worldFloat { from { transform: translate(-50%, -50%); } to { transform: translate(-50%, -105%); } }
+.pet-companion { filter: drop-shadow(0 0 var(--pet-glow, 9px) #d6a0ff); }
+#aimGuide { position: absolute; width: 290px; height: 0; border-top: 2px dashed rgba(130, 232, 255, .7); z-index: 280; transform-origin: left center; pointer-events: none; }
+#aimGuide::after { content: "+"; position: absolute; right: -10px; top: -15px; color: #abf5ff; font: 26px monospace; }
+body.ice-equipped #world, body.ice-equipped #game { cursor: crosshair; }
+@media (max-width: 800px), (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) and (hover: none) {
+    #bossHud { top: max(49px, calc(env(safe-area-inset-top) + 42px)); right: 8px; left: auto; transform: none; width: 45vw; padding: 6px 7px; }
+    #bossName { font-size: 9px; }
+    #bossPhase { font-size: 8px; }
+    #message { top: 30%; font-size: 18px; }
+    #mobilePause { display: block; }
+    .control-hint { font-size: 8px; line-height: 1.1; display: block; }
+    #hudInfo { line-height: 1.65; }
+    #waveText { font-size: 16px; }
+    #rightPanel { touch-action: pan-y; }
+    .modal-box, .overlay { touch-action: pan-y; }
+    #saveStatus { pointer-events: none; }
+    #waveShop { padding-top: max(15px, env(safe-area-inset-top)); }
+    .shop-heading { font-size: 30px; }
+    .shop-summary { font-size: 13px; margin-bottom: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .world-float, .player-hit { animation: none; } }
+
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div id="world">
+        <div id="aimGuide" class="hidden"></div>
+        <div id="petCompanion" class="pet-companion hidden">✨</div>
+    </div>
+
+    <div id="player">
+        <div class="player-head"></div>
+        <div class="player-body"></div>
+        <div class="player-wand"></div>
+    </div>
+
+    <div id="bossHud" class="hidden" role="status">
+        <div id="bossName"></div><div class="boss-bar"><div id="bossFill"></div></div>
+        <div id="bossPhase"></div>
+    </div>
+    <div id="hud">
+
+        <div id="levelText">Nivel 1</div>
+        <div id="waveText" class="wave-line">🌊 Oleada 0</div>
+
+        <div class="stat-label">❤️ Vida <span id="hpValue" class="stat-value"></span></div>
+
+        <div class="bar">
+            <div id="hpFill" class="fill"></div>
+        </div>
+
+        <div class="stat-label">💧 Maná <span id="manaValue" class="stat-value"></span></div>
+
+        <div class="bar">
+            <div id="manaFill" class="fill"></div>
+        </div>
+
+        <div class="stat-label">⭐ Experiencia</div>
+
+        <div class="bar">
+            <div id="xpFill" class="fill"></div>
+        </div>
+
+        <div id="hudInfo">
+
+            🪙 Oro:
+            <span id="goldText">0</span>
+
+            <br>
+
+            👹 Muertes:
+            <span id="killsText">0</span>
+
+            <br>
+
+            🔮 Poder:
+            <span id="magicText">10</span>
+
+            <br>
+
+            ♻️ Renacimientos:
+            <span id="rebirthText">0</span>
+
+            <br>
+
+            ⚔️ Arma:
+            <span id="weaponText">Espada</span>
+
+            <br>
+
+            ✨ Poder:
+            <span id="powerText">Bola de Fuego</span>
+            <br>
+            🐾 Mascota:
+            <span id="petText">Ninguna</span>
+            <br>
+            🎯 Esquivas perfectas:
+            <span id="dodgesText">0</span><div id="bonusInfo"></div><div id="nextRebirthInfo"></div><div id="recordInfo"></div>
+
+        </div>
+
+    </div>
+
+    <button id="hudToggle" type="button" aria-expanded="true" onclick="toggleMobileHud()">📊 Ocultar</button>
+    <button id="panelToggle" type="button" aria-expanded="false" onclick="toggleMobilePanel()">⚙️ Menú</button>
+
+    <div id="mobileJoystick" aria-label="Joystick táctil para mover al personaje" role="application">
+        <div id="mobileStick"></div>
+    </div>
+
+    <div id="rightPanel">
+
+        <div class="panel-section">
+
+            <h2>✨ Habilidades</h2>
+
+            <div>
+                Puntos:
+                <span id="skillPointsText">0</span>
+            </div>
+
+            <button class="action-button"
+                onclick="upgradeStat('magic')">
+                🔮 Poder mágico +10
+            </button>
+
+            <button class="action-button"
+                onclick="upgradeStat('hp')">
+                ❤️ Vida máxima +20
+            </button>
+
+            <button class="action-button"
+                onclick="upgradeStat('mana')">
+                💧 Maná máximo +25
+            </button>
+            <button class="action-button" onclick="upgradeStat('haste')">⚡ Cadencia +8%</button>
+
+        </div>
+
+        <div class="panel-section">
+
+            <h2>⚔️ Armas</h2><p id="techniqueInfo" class="technique-note"></p>
+
+            <button id="weapon-sword"
+                class="action-button"
+                onclick="equipWeapon('sword')">
+                ⚔️ Espada
+            </button>
+
+            <button id="weapon-axe"
+                class="action-button"
+                onclick="equipWeapon('axe')">
+                🪓 Hacha
+            </button>
+
+            <button id="weapon-staff"
+                class="action-button"
+                onclick="equipWeapon('staff')">
+                🪄 Bastón Arcano
+            </button>
+
+            <button id="weapon-scythe"
+                class="action-button"
+                onclick="equipWeapon('scythe')">
+                ☠️ Guadaña
+            </button>
+
+        </div>
+
+        <div class="panel-section">
+
+            <h2>🔮 Poderes</h2><p id="powerInfo" class="technique-note"></p>
+
+            <button id="power-fire"
+                class="action-button"
+                onclick="equipPower('fire')">
+                🔥 Bola de Fuego
+            </button>
+
+            <button id="power-ice"
+                class="action-button"
+                onclick="equipPower('ice')">
+                ❄️ Hielo manual — Nivel 3
+            </button>
+
+            <button id="power-lightning"
+                class="action-button"
+                onclick="equipPower('lightning')">
+                ⚡ Rayo en cadena — Nivel 5
+            </button>
+
+            <button id="power-meteor"
+                class="action-button"
+                onclick="equipPower('meteor')">
+                ☄️ Meteoro — Nivel 8
+            </button>
+
+        </div>
+
+        <div class="panel-section">
+
+            <h2>📜 Progreso</h2>
+
+            <div id="unlockInfo">
+                ❄️ Hielo: Nivel 3
+                <br>
+                ⚡ Rayo: Nivel 5
+                <br>
+                ☄️ Meteoro: Nivel 8
+            </div>
+            <button class="action-button" onclick="showBestiary()">📖 Grimorio de enemigos</button>
+            <button id="mobilePause" class="action-button" onclick="togglePause()">⏸️ Pausa</button>
+
+        </div>
+
+    </div>
+
+    <div id="controls">
+
+        <button class="control" data-mobile-action="attack" type="button">
+            <strong>⚔️ ATAQUE</strong>
+            <span class="control-hint">MANTENER / SPACE</span>
+        </button>
+
+        <button class="control" data-mobile-action="magic" type="button">
+            <strong>🔮 PODER</strong>
+            <span class="control-hint">MANTENER / CLICK</span>
+        </button>
+
+        <button class="control" data-mobile-action="dash" type="button">
+            <strong>💨 ESQUIVAR</strong>
+            <span class="control-hint">LISTA / SHIFT</span>
+        </button>
+
+    </div>
+
+    <button id="pauseButton"
+        onclick="togglePause()">
+        ⏸️ Pausa
+    </button>
+
+    <div id="message"></div>
+
+    <div id="saveStatus">
+        💾 Guardado automático
+    </div>
+
+    <div id="mainMenu" class="overlay">
+
+        <h1 class="menu-title">
+            Reino de las Sombras
+        </h1>
+
+        <div class="menu-subtitle">
+            Elige tu destino, mago. Cada vida te hace más fuerte.
+        </div>
+
+        <button class="menu-button"
+            onclick="startNewGame()">
+            ⚔️ NUEVA PARTIDA
+        </button>
+
+        <button id="continueButton"
+            class="menu-button"
+            onclick="continueGame()">
+            ▶️ CONTINUAR
+        </button>
+
+        <button class="menu-button"
+            onclick="showSaveInfo()">
+            💾 PARTIDA GUARDADA
+        </button>
+
+        <button class="menu-button"
+            onclick="showHelp()">
+            ❓ CONTROLES
+        </button>
+
+        <button class="menu-button" onclick="showBestiary()">📖 GRIMORIO</button>
+        <div id="menuSaveText"
+            class="menu-info">
+        </div>
+
+    </div>
+
+    <div id="waveShop" class="overlay hidden">
+        <h1 class="shop-heading">🏆 ¡Oleada superada!</h1>
+        <p id="shopSummary" class="shop-summary">Reúne tus monedas y prepara tu próxima batalla.</p>
+        <div class="shop-grid">
+            <section class="shop-card">
+                <h2>🛠️ Mejoras permanentes de la partida</h2>
+                <p>Invierte el oro que ganaste. Cuanto más mejores, más caro será volver a hacerlo.</p>
+                <button id="shopDamage" class="shop-action" onclick="buyUpgrade('damage')">⚔️ Daño</button>
+                <button id="shopHp" class="shop-action" onclick="buyUpgrade('hp')">❤️ Vida máxima</button>
+                <button id="shopMana" class="shop-action" onclick="buyUpgrade('mana')">💧 Reserva de maná</button>
+                <button id="shopSpeed" class="shop-action" onclick="buyUpgrade('speed')">💨 Velocidad y esquiva</button>
+                <button id="shopHaste" class="shop-action" onclick="buyUpgrade('haste')">⚡ Cadencia</button>
+            </section>
+            <section class="shop-card">
+                <h2>🐾 Mascotas</h2>
+                <p>Compra compañeros con habilidades distintas. Puedes cambiar de mascota entre oleadas.</p>
+                <button id="petWolf" class="shop-action" onclick="buyPet('wolf')">🐺 Lobo</button>
+                <button id="petFairy" class="shop-action" onclick="buyPet('fairy')">🧚 Hada</button>
+                <button id="petGolem" class="shop-action" onclick="buyPet('golem')">🪨 Gólem</button>
+                <p id="petDescription">Elige una mascota para ver qué hace.</p>
+                <button id="petUpgrade" class="shop-action hidden" onclick="upgradePet()">⬆️ Mejorar mascota</button>
+                <p id="petNextInfo"></p>
+            </section>
+        </div>
+        <div class="shop-preview"><p id="nextWaveInfo"></p><p id="rebirthProgress"></p></div>
+        <div class="shop-footer">
+            <button id="rebirthButton" class="menu-button hidden" onclick="rebirth()">♻️ RENACER Y OBTENER BONUS</button>
+            <button class="menu-button" onclick="startWave()">⚔️ EMPEZAR SIGUIENTE OLEADA</button>
+        </div>
+        <div class="menu-info">Cada quinta oleada aparece un JEFE. Las mascotas y sus niveles sobreviven al renacimiento.</div>
+    </div>
+
+    <div id="pauseScreen">
+
+        <h1>⏸️ PAUSA</h1>
+
+        <button class="menu-button"
+            onclick="resumeGame()">
+            ▶️ CONTINUAR
+        </button>
+
+        <button class="menu-button"
+            onclick="saveGame()">
+            💾 GUARDAR
+        </button>
+
+        <button class="menu-button"
+            onclick="backToMenu()">
+            🏠 MENÚ PRINCIPAL
+        </button>
+
+    </div>
+
+    <div id="gameOver">
+
+        <h1>💀 HAS MUERTO</h1>
+
+        <p>
+            Oleada alcanzada:
+            <strong id="finalWave">0</strong>
+        </p>
+        <p>
+            Nivel:
+            <strong id="finalLevel">1</strong>
+        </p>
+
+        <p>
+            Enemigos derrotados:
+            <strong id="finalKills">0</strong>
+        </p>
+
+        <p>
+            Renacimientos:
+            <strong id="finalRebirths">0</strong>
+        </p>
+
+        <button class="menu-button"
+            onclick="respawnPlayer()">
+            💖 REINTENTAR OLEADA
+        </button>
+
+        <button class="menu-button"
+            onclick="backToMenu()">
+            🏠 MENÚ
+        </button>
+
+    </div>
+
+    <div id="infoModal"
+        class="modal hidden">
+
+        <div class="modal-box">
+
+            <h2 id="modalTitle">
+                Información
+            </h2>
+
+            <div id="modalContent"></div>
+
+            <button class="close-button"
+                onclick="closeModal()">
+                CERRAR
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+"use strict";
+
+// Se conserva la clave original para migrar partidas anteriores.
+const SAVE_KEY = "reino_sombras_save_v4";
+const WORLD_SIZE = 4000;
+const CENTER = WORLD_SIZE / 2;
+const MAX_ACTIVE_ENEMIES = 24;
+const $ = id => document.getElementById(id);
+const world = $("world");
+const mainMenu = $("mainMenu");
+const pauseScreen = $("pauseScreen");
+const gameOverScreen = $("gameOver");
+const infoModal = $("infoModal");
+const playerElement = $("player");
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+const numberOr = (n, fallback) => typeof n === "number" && Number.isFinite(n) ? n : fallback;
+const count = (n, fallback = 0) => Math.floor(clamp(numberOr(n, fallback), 0, Number.MAX_SAFE_INTEGER));
+const distance = (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1);
+
+const player = {};
+let gameState = "menu";
+let keys = {};
+let touchKeys = { w: false, a: false, s: false, d: false };
+let enemies = [];
+let projectiles = [];
+let effects = [];
+let enemyId = 0;
+let wave = 0, waveSpawned = 0, waveQuota = 0;
+let enemySpawnTimer = 0, autoSaveTimer = 0, petAttackTimer = 0, petUtilityTimer = 0;
+let lastTime = performance.now(), hudTimer = 0, worldTime = 0;
+let messageTimer = null, messagePriority = 0, messageUntil = 0;
+let damageTakenThisWave = 0, lastWaveReward = 0, lastWaveFlawless = false;
+let loadedStage = "playing", modalPaused = false;
+let facing = { x: 1, y: 0 };
+const aim = { x: 1, y: 0, valid: false, active: false, screenX: null, screenY: null };
+const held = { attack: false, magic: false };
+let actionPointer = null, joystickPointerId = null;
+
+const weapons = {
+    sword: { name: "Espada", damage: 27, range: 135, cooldown: 310,
+        technique: "Tríada: el tercer corte lanza una onda que atraviesa enemigos." },
+    axe: { name: "Hacha", damage: 53, range: 132, cooldown: 760,
+        technique: "Ruptura: golpe circular, empuje y armadura ignorada. Cada tercer golpe aturde." },
+    staff: { name: "Bastón Arcano", damage: 13, range: 760, cooldown: 650,
+        technique: "Salva: tres misiles guiados sin gastar maná; reparte los impactos." },
+    scythe: { name: "Guadaña", damage: 36, range: 175, cooldown: 600,
+        technique: "Cosecha: barrido de 360° que roba vida al golpear." }
+};
+const powers = {
+    fire: { name: "Bola de Fuego", cost: 10, damage: 27, requiredLevel: 1, cooldown: 360,
+        detail: "Guiada: explota y deja al objetivo ardiendo durante 2 segundos." },
+    ice: { name: "Hielo", cost: 18, damage: 45, requiredLevel: 3, cooldown: 480,
+        detail: "Puntería manual: proyectil recto que congela durante 2,4 segundos." },
+    lightning: { name: "Rayo", cost: 25, damage: 70, requiredLevel: 5, cooldown: 650,
+        detail: "Autoapuntado: encadena hasta 3 enemigos cercanos y los paraliza." },
+    meteor: { name: "Meteoro", cost: 45, damage: 130, requiredLevel: 8, cooldown: 1150,
+        detail: "Autoapuntado: marca al enemigo y arrasa una zona tras una breve caída." }
+};
+const petCatalog = {
+    wolf: { name: "Lobo", emoji: "🐺", cost: 160 },
+    fairy: { name: "Hada", emoji: "🧚", cost: 190 },
+    golem: { name: "Gólem", emoji: "🪨", cost: 220 }
+};
+const enemyCatalog = {
+    shadow: { name: "Sombra", hp: 1, damage: 1, speed: 1, reward: 1, from: 1,
+        detail: "Persigue en grupo; gana velocidad gradualmente." },
+    fast: { name: "Acechador", hp: .63, damage: .8, speed: 1.75, reward: 1.25, from: 2,
+        detail: "Muy veloz. Desde la oleada 10 se vuelve translúcido y acelera más." },
+    slime: { name: "Slime", hp: 1.25, damage: .8, speed: .8, reward: 1.25, from: 2,
+        detail: "Al morir se divide en dos crías más pequeñas y débiles, hasta dos generaciones." },
+    brute: { name: "Bruto", hp: 2.2, damage: 1.65, speed: .62, reward: 1.8, from: 3,
+        detail: "Carga un golpe de área. Las oleadas mejoran su alcance y preparación." },
+    hexer: { name: "Hechicero", hp: .85, damage: .9, speed: .95, reward: 1.6, from: 4,
+        detail: "Mantiene distancia y lanza bolas mágicas; después dispara abanicos." },
+    elite: { name: "Duelista", hp: 1.45, damage: 1.3, speed: 1.15, reward: 2, from: 5,
+        detail: "Te rodea y prepara embestidas hacia tu última posición." },
+    bomber: { name: "Volátil", hp: .7, damage: 1.6, speed: 1.35, reward: 1.5, from: 6,
+        detail: "Anuncia una explosión al acercarse. Mátalo o sal del círculo." },
+    sentinel: { name: "Centinela", hp: 2.05, damage: 1.25, speed: .7, reward: 2, from: 7,
+        detail: "Su escudo reduce el daño. Hacha, hielo y rayo abren su defensa." },
+    shaman: { name: "Chamán", hp: 1.1, damage: .65, speed: .85, reward: 2.1, from: 8,
+        detail: "Cura aliados cercanos. Su curación gana alcance y frecuencia." }
+};
+const bossCatalog = [
+    { name: "ARCONTE DEL VACÍO", style: "arconte", detail: "Abanicos dirigidos y coronas de magia. A media vida acelera sus patrones.", summon: false },
+    { name: "MATRIARCA DEL FANGO", style: "matriarca", detail: "Anillos de magia. A media vida invoca slimes y acechadores.", summon: true },
+    { name: "NIGROMANTE UMBRÍO", style: "nigromante", detail: "Espirales y abanicos. A media vida invoca un ejército de subordinados.", summon: true }
+];
+
+function resetPlayer() {
+    Object.assign(player, {
+        x: CENTER, y: CENTER, speed: 300, hp: 100, maxHp: 100,
+        mana: 100, maxMana: 100, level: 1, xp: 0, xpNeeded: 100,
+        magic: 10, gold: 0, kills: 0, skillPoints: 0, rebirths: 0,
+        weapon: "sword", power: "fire", invincible: false, invincibleTime: 0, hitCooldown: 0,
+        attackCooldown: 0, magicCooldown: 0, dashCooldown: 0, weaponBonus: 0,
+        hastePoints: 0, pet: "none", petsOwned: [], petLevels: {}, petShield: 0,
+        perfectDodges: 0, bestWave: 0, bossesKilled: 0, swordCombo: 0,
+        comboTime: 0, axeCombo: 0,
+        shopUpgrades: { damage: 0, hp: 0, mana: 0, speed: 0, haste: 0 }
+    });
+    petAttackTimer = petUtilityTimer = 0;
+    resetInput();
+}
+
+function damageMultiplier() { return (1 + player.rebirths * .30) * (1 + player.weaponBonus * .07); }
+function xpMultiplier() { return 1 + player.rebirths * .10; }
+function attackRate() { return 1 + player.shopUpgrades.haste * .12 + player.hastePoints * .08; }
+function rebirthRequirement() { return (player.rebirths + 1) * 5; }
+function petLevel(id = player.pet) { return player.petsOwned.includes(id) ? Math.max(1, player.petLevels[id] || 1) : 0; }
+function petPower(id = player.pet) { return petLevel(id) ? 2 ** (petLevel(id) - 1) : 0; }
+function petUpgradeCost(id) { return petCatalog[id].cost * 10 ** petLevel(id); }
+function nearestEnemy(x = player.x, y = player.y, range = 1000, exclude = new Set()) {
+    let result = null, best = range;
+    for (const enemy of enemies) {
+        const d = distance(x, y, enemy.x, enemy.y);
+        if (!exclude.has(enemy.id) && d <= best) { result = enemy; best = d; }
+    }
+    return result;
+}
+
+function createStars() {
+    const fragment = document.createDocumentFragment();
+    for (let i = 0; i < 120; i++) {
+        const star = document.createElement("div");
+        star.className = "star";
+        star.style.cssText = `left:${Math.random() * WORLD_SIZE}px;top:${Math.random() * WORLD_SIZE}px;opacity:${.2 + Math.random() * .6}`;
+        fragment.appendChild(star);
+    }
+    world.appendChild(fragment);
+}
+
+function spawnEnemy(forceBoss = false, options = {}) {
+    if (enemies.length >= MAX_ACTIVE_ENEMIES) return null;
+    const boss = forceBoss ? bossCatalog[(Math.max(1, Math.floor(wave / 5)) - 1) % bossCatalog.length] : null;
+    const available = Object.keys(enemyCatalog).filter(id => wave >= enemyCatalog[id].from);
+    // Una presencia garantizada presenta la criatura nueva de cada oleada.
+    let kind = options.kind || (boss ? "boss" : available[Math.floor(Math.random() * available.length)]);
+    if (!enemyCatalog[kind] && kind !== "boss") kind = "shadow";
+    const stats = boss ? { name: boss.name, hp: 8 + Math.floor(wave / 5), damage: 1.8, speed: .8, reward: 9 } : enemyCatalog[kind];
+    const level = 1 + Math.max(0, wave - 1) * 4;
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 390 + Math.random() * 210;
+    let x = options.x ?? clamp(player.x + Math.cos(angle) * radius, 70, WORLD_SIZE - 70);
+    let y = options.y ?? clamp(player.y + Math.sin(angle) * radius, 70, WORLD_SIZE - 70);
+    const generation = options.generation || 0;
+    const maxHp = Math.max(1, Math.round(options.hp ?? (48 + level * 17) * stats.hp * (1 + Math.max(0, wave - 1) * .045)));
+    let speed = (76 + Math.min(90, wave * 2.1)) * stats.speed;
+    if (kind === "fast") speed *= 1 + Math.max(0, wave - 9) * .025;
+    const enemy = {
+        id: enemyId++, kind, x, y, level, hp: maxHp, maxHp,
+        damage: options.damage ?? Math.round((5 + level * 1.6) * stats.damage * (1 + wave * .016)),
+        speed: options.speed ?? speed, reward: options.reward ?? stats.reward,
+        generation, summoned: !!options.summoned, boss, phase: 1, halfTriggered: false,
+        attackCooldown: .6 + Math.random() * 1.4, skillCooldown: 1.5 + Math.random() * 2,
+        frozen: 0, stunned: 0, burnTime: 0, burnTick: 0, burnDamage: 0,
+        cast: null, chargeTime: 0, chargeX: 0, chargeY: 0,
+        pattern: 0, phaseAngle: angle, radius: boss ? 43 : kind === "slime" ? 30 * .72 ** generation : 28,
+        element: document.createElement("div")
+    };
+    enemy.element.className = `enemy enemy-${kind}${boss ? " boss-" + boss.style : ""}${kind === "fast" && wave >= 10 ? " enemy-phased" : ""}`;
+    if (generation) enemy.element.style.transform = `translate(-50%, -50%) scale(${.72 ** generation})`;
+    enemy.element.innerHTML = `<div class="enemy-name">${generation ? "Brote de slime" : stats.name} <span class="enemy-level">Nv.${level}</span></div>
+        <div class="enemy-bar"><div class="enemy-hp"></div></div>
+        <div class="enemy-body"><div class="enemy-eye left"></div><div class="enemy-eye right"></div></div>
+        <div class="enemy-status"></div>`;
+    enemy.hpBar = enemy.element.querySelector(".enemy-hp");
+    enemy.statusLabel = enemy.element.querySelector(".enemy-status");
+    world.appendChild(enemy.element);
+    enemies.push(enemy);
+    renderEnemy(enemy);
+    if (boss) showMessage(`☠️ ${boss.name}`, 3, 2300);
+    return enemy;
+}
+
+function renderEnemy(enemy) {
+    enemy.element.style.left = enemy.x + "px";
+    enemy.element.style.top = enemy.y + "px";
+    enemy.hpBar.style.width = clamp(enemy.hp / enemy.maxHp * 100, 0, 100) + "%";
+    enemy.element.classList.toggle("enemy-frozen", enemy.frozen > 0);
+    enemy.element.classList.toggle("enemy-stunned", enemy.stunned > 0);
+    enemy.element.classList.toggle("enemy-burning", enemy.burnTime > 0);
+    enemy.element.classList.toggle("enemy-enraged", enemy.phase === 2);
+    enemy.element.classList.toggle("enemy-unshielded", enemy.frozen > 0 || enemy.stunned > 0 || !!enemy.cast);
+    enemy.statusLabel.textContent = enemy.frozen > 0 ? "❄ CONGELADO" : enemy.stunned > 0 ? "⚡ PARALIZADO" : enemy.burnTime > 0 ? "🔥" : "";
+}
+
+function updatePlayer(dt) {
+    let dx = Number(!!(keys.d || keys.arrowright || touchKeys.d)) - Number(!!(keys.a || keys.arrowleft || touchKeys.a));
+    let dy = Number(!!(keys.s || keys.arrowdown || touchKeys.s)) - Number(!!(keys.w || keys.arrowup || touchKeys.w));
+    const length = Math.hypot(dx, dy);
+    if (!length) return;
+    dx /= length; dy /= length;
+    facing = { x: dx, y: dy };
+    player.x = clamp(player.x + dx * player.speed * dt, 50, WORLD_SIZE - 50);
+    player.y = clamp(player.y + dy * player.speed * dt, 50, WORLD_SIZE - 50);
+}
+
+function worldRing(x, y, radius, color = "#bd78ff", duration = .4) {
+    const element = document.createElement("div");
+    element.className = "world-ring";
+    element.style.cssText = `left:${x}px;top:${y}px;width:${radius * 2}px;height:${radius * 2}px;--effect-color:${color}`;
+    world.appendChild(element);
+    effects.push({ element, life: duration, maxLife: duration });
+    return element;
+}
+
+function beam(x1, y1, x2, y2, color = "#fff28b", lightning = false) {
+    const element = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    element.classList.add("combat-beam");
+    const dx = x2 - x1, dy = y2 - y1;
+    const left = Math.min(x1, x2) - 25, top = Math.min(y1, y2) - 25;
+    const width = Math.max(1, Math.abs(dx)) + 50, height = Math.max(1, Math.abs(dy)) + 50;
+    element.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    element.style.cssText = `left:${left}px;top:${top}px;width:${width}px;height:${height}px;color:${color}`;
+    let points = `${x1 - left},${y1 - top}`;
+    const len = Math.max(1, Math.hypot(dx, dy));
+    for (let i = 1; i < 7; i++) {
+        const offset = lightning ? (Math.random() - .5) * 24 : 0;
+        points += ` ${x1 - left + dx * i / 7 - dy / len * offset},${y1 - top + dy * i / 7 + dx / len * offset}`;
+    }
+    points += ` ${x2 - left},${y2 - top}`;
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    line.setAttribute("points", points);
+    element.appendChild(line);
+    world.appendChild(element);
+    effects.push({ element, life: .22, maxLife: .22 });
+}
+
+function castTelegraph(enemy, type, duration, radius = 0, extra = {}) {
+    const element = document.createElement("div");
+    element.className = "attack-warning" + (type === "dash" ? " warning-line" : "");
+    const dx = player.x - enemy.x, dy = player.y - enemy.y, len = Math.max(1, Math.hypot(dx, dy));
+    const angle = Math.atan2(dy, dx);
+    const x = enemy.x, y = enemy.y;
+    if (type === "dash") {
+        element.style.cssText = `left:${x}px;top:${y}px;width:330px;transform:rotate(${angle}rad);--warning-time:${duration}s`;
+    } else {
+        element.style.cssText = `left:${x}px;top:${y}px;width:${radius * 2}px;height:${radius * 2}px;--warning-time:${duration}s`;
+    }
+    world.appendChild(element);
+    enemy.cast = { type, remaining: duration, duration, radius, x, y, angle, dx: dx / len, dy: dy / len, element, ...extra };
+}
+
+function shootEnemyOrb(enemy, angle, options = {}) {
+    return createProjectile({ owner: "enemy", kind: "hostile", x: enemy.x, y: enemy.y,
+        angle, speed: options.speed || Math.min(310, 180 + wave * 3), damage: enemy.damage * (options.damage || .8),
+        radius: options.radius || 9, color: options.color || (enemy.boss ? "#ff508f" : "#bd71ff"),
+        life: 5.5, curve: options.curve || 0 });
+}
+
+function fireBossPattern(enemy, cast) {
+    const phase = enemy.phase;
+    const pattern = enemy.pattern++ % 3;
+    const style = enemy.boss.style;
+    if (style === "arconte" && pattern !== 1 || style === "nigromante" && pattern === 0) {
+        const n = phase === 2 ? 7 : 5;
+        for (let i = 0; i < n; i++) shootEnemyOrb(enemy, cast.angle + (i - (n - 1) / 2) * .19);
+    } else if (style === "nigromante") {
+        const n = phase === 2 ? 15 : 11;
+        for (let i = 0; i < n; i++) shootEnemyOrb(enemy, i * Math.PI * 2 / n + enemy.pattern * .4,
+            { curve: phase === 2 ? .23 : .12, speed: 175 + Math.min(wave * 2, 80), color: "#ad7dff" });
+    } else {
+        const n = phase === 2 ? 16 : 12;
+        const offset = enemy.pattern * .37;
+        for (let i = 0; i < n; i++) shootEnemyOrb(enemy, i * Math.PI * 2 / n + offset,
+            { speed: 170 + Math.min(wave * 2, 85), color: style === "matriarca" ? "#77edaa" : "#ffae5d" });
+        if (phase === 2) shootEnemyOrb(enemy, cast.angle, { speed: 255 });
+    }
+    worldRing(enemy.x, enemy.y, 65, "#ff6b9f", .3);
+}
+
+function triggerBossPhase(enemy) {
+    if (!enemy.boss || enemy.halfTriggered || enemy.hp <= 0 || enemy.hp > enemy.maxHp / 2) return;
+    enemy.halfTriggered = true;
+    enemy.phase = 2;
+    enemy.skillCooldown = .8;
+    if (enemy.cast) { enemy.cast.element.remove(); enemy.cast = null; }
+    worldRing(enemy.x, enemy.y, 165, "#ff597c", .7);
+    if (enemy.boss.summon) {
+        const kinds = enemy.boss.style === "matriarca" ? ["slime", "slime", "fast", "fast"] : ["shadow", "elite", "hexer", "shadow", "fast"];
+        for (let i = 0; i < kinds.length; i++) {
+            const angle = i * Math.PI * 2 / kinds.length;
+            spawnEnemy(false, { kind: kinds[i], x: clamp(enemy.x + Math.cos(angle) * 105, 60, WORLD_SIZE - 60),
+                y: clamp(enemy.y + Math.sin(angle) * 105, 60, WORLD_SIZE - 60), summoned: true, reward: .5 });
+        }
+        showMessage("☠️ ¡MEDIA VIDA! El jefe invoca subordinados", 3, 2400);
+    } else showMessage("🔥 ¡MEDIA VIDA! El Arconte entra en furia", 3, 2400);
+}
+
+function resolveEnemyCast(enemy, cast) {
+    if (cast.type === "boss") fireBossPattern(enemy, cast);
+    if (cast.type === "shot") {
+        const n = wave >= 10 ? 3 : 1;
+        for (let i = 0; i < n; i++) shootEnemyOrb(enemy, cast.angle + (i - (n - 1) / 2) * .22);
+    }
+    if (cast.type === "slam" || cast.type === "explode") {
+        worldRing(cast.x, cast.y, cast.radius, "#ff5b69", .45);
+        if (distance(player.x, player.y, cast.x, cast.y) <= cast.radius + 15) damagePlayer(enemy.damage * (cast.type === "explode" ? 1.7 : 1.25));
+        if (cast.type === "explode") killEnemy(enemy);
+    }
+    if (cast.type === "dash") {
+        enemy.chargeX = cast.dx; enemy.chargeY = cast.dy;
+        enemy.chargeTime = .42;
+    }
+    if (cast.type === "heal") {
+        for (const other of enemies) {
+            if (other !== enemy && !other.boss && distance(enemy.x, enemy.y, other.x, other.y) < cast.radius) {
+                other.hp = Math.min(other.maxHp, other.hp + Math.round(other.maxHp * Math.min(.22, .07 + wave * .003)));
+                beam(enemy.x, enemy.y, other.x, other.y, "#82ffad");
+            }
+        }
+        worldRing(enemy.x, enemy.y, cast.radius, "#82ffad", .5);
+    }
+}
+
+function updateEnemies(dt) {
+    for (const enemy of [...enemies]) {
+        if (gameState !== "playing") break;
+        if (!enemies.includes(enemy)) continue;
+        enemy.attackCooldown = Math.max(0, enemy.attackCooldown - dt);
+        enemy.skillCooldown = Math.max(0, enemy.skillCooldown - dt);
+        enemy.frozen = Math.max(0, enemy.frozen - dt);
+        enemy.stunned = Math.max(0, enemy.stunned - dt);
+        if (enemy.burnTime > 0) {
+            enemy.burnTime = Math.max(0, enemy.burnTime - dt);
+            enemy.burnTick -= dt;
+            if (enemy.burnTick <= 0) { enemy.burnTick = .5; damageEnemy(enemy, enemy.burnDamage); }
+            if (!enemies.includes(enemy)) continue;
+        }
+        triggerBossPhase(enemy);
+        if (enemy.frozen > 0 || enemy.stunned > 0) { renderEnemy(enemy); continue; }
+        if (enemy.cast) {
+            enemy.cast.remaining -= dt;
+            enemy.cast.element.style.setProperty("--warning-progress", 1 - enemy.cast.remaining / enemy.cast.duration);
+            if (enemy.cast.remaining <= 0) {
+                const cast = enemy.cast;
+                enemy.cast = null;
+                cast.element.remove();
+                resolveEnemyCast(enemy, cast);
+            }
+            if (enemies.includes(enemy)) renderEnemy(enemy);
+            continue;
+        }
+        const dx = player.x - enemy.x, dy = player.y - enemy.y, d = Math.max(1, Math.hypot(dx, dy));
+        const nx = dx / d, ny = dy / d;
+        if (enemy.chargeTime > 0) {
+            enemy.chargeTime -= dt;
+            enemy.x += enemy.chargeX * (510 + Math.min(150, wave * 5)) * dt;
+            enemy.y += enemy.chargeY * (510 + Math.min(150, wave * 5)) * dt;
+        } else {
+            let move = d > (enemy.boss ? 250 : enemy.kind === "hexer" || enemy.kind === "shaman" ? 290 : 54) ? 1 : 0;
+            if ((enemy.kind === "hexer" || enemy.kind === "shaman") && d < 195) move = -.6;
+            enemy.x += nx * enemy.speed * move * dt;
+            enemy.y += ny * enemy.speed * move * dt;
+            if (enemy.kind === "elite" && d < 370) {
+                enemy.x += -ny * enemy.speed * .45 * dt;
+                enemy.y += nx * enemy.speed * .45 * dt;
+            }
+        }
+        if (enemy.boss && enemy.skillCooldown <= 0 && d < 1000) {
+            castTelegraph(enemy, "boss", enemy.phase === 2 ? .5 : .72, 73);
+            enemy.skillCooldown = Math.max(1.15, 2.8 - wave * .024 - (enemy.phase === 2 ? .55 : 0));
+        } else if (enemy.kind === "hexer" && enemy.skillCooldown <= 0 && d < 850) {
+            castTelegraph(enemy, "shot", Math.max(.36, .72 - wave * .01), 45);
+            enemy.skillCooldown = Math.max(1.8, 3.7 - wave * .055);
+        } else if ((enemy.kind === "brute" || enemy.kind === "sentinel") && enemy.skillCooldown <= 0 && d < 180) {
+            castTelegraph(enemy, "slam", Math.max(.48, .95 - wave * .014), 103 + Math.min(55, wave * 2));
+            enemy.skillCooldown = Math.max(1.7, 3.2 - wave * .035);
+        } else if (enemy.kind === "bomber" && d < 148) {
+            castTelegraph(enemy, "explode", Math.max(.65, 1.1 - wave * .012), 135 + Math.min(40, wave));
+        } else if (enemy.kind === "elite" && enemy.skillCooldown <= 0 && d < 400 && d > 100) {
+            castTelegraph(enemy, "dash", .55);
+            enemy.skillCooldown = Math.max(2, 4.2 - wave * .045);
+        } else if (enemy.kind === "shaman" && enemy.skillCooldown <= 0) {
+            castTelegraph(enemy, "heal", .7, 230 + Math.min(130, wave * 4));
+            enemy.skillCooldown = Math.max(2.9, 5 - wave * .045);
+        }
+        if (d <= enemy.radius + 31 && enemy.attackCooldown <= 0) {
+            damagePlayer(enemy.damage);
+            enemy.attackCooldown = Math.max(.5, .95 - wave * .009);
+        }
+        enemy.x = clamp(enemy.x, 40, WORLD_SIZE - 40);
+        enemy.y = clamp(enemy.y, 40, WORLD_SIZE - 40);
+        renderEnemy(enemy);
+    }
+}
+
+function createProjectile(options) {
+    if (projectiles.length >= 180) return null;
+    const element = document.createElement("div");
+    element.className = "projectile " + (options.kind === "hostile" ? "hostile-orb" : options.kind === "ice" ? "iceball ice-shard" : options.kind === "fire" ? "fireball" : "arcane-bolt");
+    const p = { age: 0, life: 3, speed: 650, radius: 8, curve: 0, hit: new Set(), ...options, element };
+    element.style.cssText = `left:${p.x}px;top:${p.y}px;width:${p.radius * 2}px;height:${p.radius * 2}px;--orb-color:${p.color || "#c39bff"}`;
+    world.appendChild(element);
+    projectiles.push(p);
+    return p;
+}
+
+function segmentDistance(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1, lengthSq = dx * dx + dy * dy;
+    const t = lengthSq ? clamp(((px - x1) * dx + (py - y1) * dy) / lengthSq, 0, 1) : 0;
+    return distance(px, py, x1 + t * dx, y1 + t * dy);
+}
+
+function updateProjectiles(dt) {
+    for (const p of [...projectiles]) {
+        if (gameState !== "playing") break;
+        p.age += dt;
+        if (p.target && !enemies.includes(p.target)) p.target = nearestEnemy(p.x, p.y, 450);
+        if (p.target) p.angle = Math.atan2(p.target.y - p.y, p.target.x - p.x);
+        p.angle += p.curve * dt;
+        const oldX = p.x, oldY = p.y;
+        p.x += Math.cos(p.angle) * p.speed * dt;
+        p.y += Math.sin(p.angle) * p.speed * dt;
+        let remove = p.age >= p.life || p.x < 0 || p.y < 0 || p.x > WORLD_SIZE || p.y > WORLD_SIZE;
+        if (p.owner === "enemy") {
+            if (segmentDistance(player.x, player.y, oldX, oldY, p.x, p.y) < 20 + p.radius) {
+                damagePlayer(p.damage); remove = true;
+            }
+        } else {
+            const collisions = enemies.filter(e => !p.hit.has(e.id) && segmentDistance(e.x, e.y, oldX, oldY, p.x, p.y) < e.radius + p.radius)
+                .sort((a, b) => distance(oldX, oldY, a.x, a.y) - distance(oldX, oldY, b.x, b.y));
+            for (const enemy of collisions) {
+                p.hit.add(enemy.id);
+                if (p.kind === "ice") {
+                    enemy.frozen = enemy.boss ? .85 : 2.4;
+                    enemy.chargeTime = 0;
+                    worldRing(enemy.x, enemy.y, 48, "#88eaff", .4);
+                }
+                if (p.kind === "fire") {
+                    enemy.burnTime = 2; enemy.burnTick = .5;
+                    enemy.burnDamage = 5 + player.magic * .2;
+                    worldRing(enemy.x, enemy.y, 90, "#ff8e45", .3);
+                    for (const other of [...enemies]) if (other !== enemy && distance(enemy.x, enemy.y, other.x, other.y) < 90) damageEnemy(other, p.damage * .35);
+                }
+                damageEnemy(enemy, p.damage, { pierce: p.pierce || p.kind === "ice" });
+                if (!p.pierce) { remove = true; break; }
+            }
+        }
+        p.element.style.left = p.x + "px";
+        p.element.style.top = p.y + "px";
+        if (remove) { p.element.remove(); projectiles = projectiles.filter(item => item !== p); }
+    }
+}
+
+function updateEffects(dt) {
+    for (const effect of [...effects]) {
+        if (gameState !== "playing") break;
+        effect.life -= dt;
+        effect.element.style.opacity = clamp(effect.life / Math.min(.3, effect.maxLife), 0, 1);
+        if (effect.life <= 0) {
+            effect.element.remove();
+            effects = effects.filter(item => item !== effect);
+            if (effect.resolve) effect.resolve();
+        }
+    }
+}
+
+function damagePlayer(rawAmount) {
+    if (gameState !== "playing" || player.invincible || player.hitCooldown > 0) return 0;
+    let amount = Math.max(1, Math.round(rawAmount));
+    if (player.pet === "golem") {
+        amount = Math.max(1, Math.round(amount * .78));
+        const absorbed = Math.min(player.petShield, amount);
+        amount -= absorbed; player.petShield -= absorbed;
+        if (absorbed) worldRing(player.x, player.y, 48, "#c1bcff", .25);
+    }
+    player.hitCooldown = .32;
+    if (amount <= 0) return 0;
+    player.hp = Math.max(0, player.hp - amount);
+    damageTakenThisWave += amount;
+    playerElement.classList.add("player-hit");
+    showMessage(`💥 -${amount} vida`, 0, 550);
+    if (player.hp <= 0) handleGameOver();
+    return amount;
+}
+
+function knockback(enemy, amount) {
+    const dx = enemy.x - player.x, dy = enemy.y - player.y, len = Math.max(1, Math.hypot(dx, dy));
+    const force = enemy.boss ? amount * .25 : amount;
+    enemy.x = clamp(enemy.x + dx / len * force, 40, WORLD_SIZE - 40);
+    enemy.y = clamp(enemy.y + dy / len * force, 40, WORLD_SIZE - 40);
+}
+
+function meleeAttack() {
+    if (gameState !== "playing" || player.attackCooldown > 0) return;
+    const weapon = weapons[player.weapon];
+    player.attackCooldown = Math.max(85, weapon.cooldown / attackRate());
+    const target = nearestEnemy(player.x, player.y, weapon.range + 60);
+    const angle = target ? Math.atan2(target.y - player.y, target.x - player.x) : Math.atan2(facing.y, facing.x);
+    if (target) facing = { x: Math.cos(angle), y: Math.sin(angle) };
+    if (player.weapon === "staff") {
+        const targets = [...enemies].filter(e => distance(player.x, player.y, e.x, e.y) <= weapon.range)
+            .sort((a, b) => distance(player.x, player.y, a.x, a.y) - distance(player.x, player.y, b.x, b.y));
+        for (let i = 0; i < 3 && targets.length; i++) {
+            const enemy = targets[i % targets.length];
+            createProjectile({ owner: "player", kind: "arcane", x: player.x, y: player.y,
+                target: enemy, angle: Math.atan2(enemy.y - player.y, enemy.x - player.x),
+                damage: weapon.damage + player.level * 2 + player.magic * .35, speed: 570 + i * 65, radius: 6 });
+        }
+        worldRing(player.x, player.y, 42, "#c9a1ff", .2);
+        return;
+    }
+    let range = weapon.range, bonus = 1, color = "#f5eaff";
+    if (player.weapon === "sword") {
+        player.swordCombo = player.comboTime > 0 ? player.swordCombo + 1 : 1;
+        player.comboTime = 1.6;
+        if (player.swordCombo >= 3) {
+            player.swordCombo = 0; bonus = 1.25; color = "#ffe18a";
+            createProjectile({ owner: "player", kind: "wave", x: player.x, y: player.y, angle,
+                speed: 780, life: .68, radius: 24, damage: weapon.damage + player.level * 3,
+                pierce: true, color: "#ffe18a" });
+        }
+    }
+    if (player.weapon === "axe") { player.axeCombo++; if (player.axeCombo % 3 === 0) range = 195; color = "#ffb067"; }
+    if (player.weapon === "scythe") color = "#bc8cff";
+    worldRing(player.x, player.y, range, color, .22);
+    let healing = 0;
+    for (const enemy of [...enemies]) {
+        if (distance(player.x, player.y, enemy.x, enemy.y) > range + enemy.radius * .35) continue;
+        const enemyAngle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
+        if (player.weapon === "sword" && Math.cos(enemyAngle - angle) < .05) continue;
+        if (player.weapon === "axe") {
+            if (player.axeCombo % 3 === 0) enemy.stunned = enemy.boss ? .3 : 1;
+            knockback(enemy, 88);
+        }
+        const dealt = damageEnemy(enemy, (weapon.damage + player.level * (player.weapon === "scythe" ? 5 : 4)) * bonus,
+            { pierce: player.weapon === "axe" });
+        if (player.weapon === "scythe") healing += dealt * .09;
+    }
+    if (healing > 0) {
+        const heal = Math.min(Math.round(healing), Math.ceil(player.maxHp * .10));
+        player.hp = Math.min(player.maxHp, player.hp + heal);
+        showFloat(player.x, player.y, `+${heal} ♥`, "#94ffb9");
+    }
+}
+
+function magicAttack() {
+    if (gameState !== "playing" || player.magicCooldown > 0) return false;
+    const power = powers[player.power];
+    if (player.level < power.requiredLevel) { showMessage(`🔒 Necesitas nivel ${power.requiredLevel}`); return false; }
+    if (player.mana < power.cost) { showMessage("💧 No tienes suficiente maná", 0, 600); return false; }
+    const manual = player.power === "ice";
+    if (manual && !aim.valid) { showMessage("❄️ Apunta con el cursor o arrastra PODER para disparar", 1, 1700); return false; }
+    const target = manual ? null : nearestEnemy();
+    if (!manual && !target) { showMessage("🎯 Acércate a un enemigo", 0, 600); return false; }
+    player.mana -= power.cost;
+    player.magicCooldown = Math.max(100, power.cooldown / attackRate());
+    if (player.power === "meteor") { meteorAttack(target); return true; }
+    if (player.power === "lightning") { lightningAttack(target); return true; }
+    createProjectile({ owner: "player", kind: player.power, x: player.x, y: player.y,
+        angle: manual ? Math.atan2(aim.y, aim.x) : Math.atan2(target.y - player.y, target.x - player.x),
+        target, speed: manual ? 790 : 650, radius: manual ? 13 : 9,
+        life: manual ? 1.3 : 2.4, damage: power.damage + player.magic });
+    return true;
+}
+
+function lightningAttack(first) {
+    const hit = new Set();
+    let target = first, fromX = player.x, fromY = player.y;
+    // Máximo tres impactos distintos; cada salto necesita proximidad real.
+    for (let i = 0; i < 3 && target; i++) {
+        hit.add(target.id);
+        const x = target.x, y = target.y;
+        beam(fromX, fromY, x, y, "#fff27a", true);
+        target.stunned = target.boss ? .5 : 1.35;
+        target.chargeTime = 0;
+        damageEnemy(target, powers.lightning.damage + player.magic, { pierce: true });
+        fromX = x; fromY = y;
+        target = nearestEnemy(x, y, 235, hit);
+    }
+}
+
+function meteorAttack(target = nearestEnemy()) {
+    if (!target) return;
+    const x = target.x, y = target.y, radius = 210;
+    const element = document.createElement("div");
+    element.className = "meteor-mark";
+    element.style.cssText = `left:${x}px;top:${y}px;width:${radius * 2}px;height:${radius * 2}px`;
+    element.textContent = "☄";
+    world.appendChild(element);
+    effects.push({ element, life: .55, maxLife: .55, resolve() {
+        worldRing(x, y, radius, "#ff9e54", .5);
+        for (const enemy of [...enemies]) if (distance(x, y, enemy.x, enemy.y) <= radius + enemy.radius) {
+            damageEnemy(enemy, 130 + player.magic * 2, { pierce: true });
+            if (enemies.includes(enemy)) knockback(enemy, 55);
+        }
+    } });
+}
+
+function damageEnemy(enemy, amount, options = {}) {
+    if (gameState !== "playing" || !enemies.includes(enemy) || enemy.hp <= 0) return 0;
+    if (enemy.kind === "sentinel" && enemy.frozen <= 0 && enemy.stunned <= 0 && !enemy.cast && !options.pierce) amount *= .42;
+    amount = Math.max(1, Math.round(amount * damageMultiplier()));
+    const actual = Math.min(enemy.hp, amount);
+    enemy.hp -= amount;
+    showDamage(enemy, amount);
+    if (enemy.hp <= 0) killEnemy(enemy);
+    else { triggerBossPhase(enemy); renderEnemy(enemy); }
+    return actual;
+}
+
+function removeEnemy(enemy) {
+    if (enemy.cast) enemy.cast.element.remove();
+    enemy.element.remove();
+    enemies = enemies.filter(e => e !== enemy);
+}
+
+function killEnemy(enemy) {
+    if (!enemies.includes(enemy)) return;
+    const xp = Math.round((30 + enemy.level * 15) * enemy.reward * xpMultiplier());
+    const gold = Math.round((10 + enemy.level * 5 + wave * 2) * enemy.reward);
+    player.xp += xp; player.gold += gold; player.kills++;
+    if (enemy.boss) { player.bossesKilled++; showMessage(`🏆 ¡${enemy.boss.name} derrotado!`, 3, 2300); }
+    removeEnemy(enemy);
+    if (enemy.kind === "slime" && enemy.generation < 2) {
+        for (let i = 0; i < 2; i++) {
+            spawnEnemy(false, { kind: "slime", x: clamp(enemy.x + (i ? 25 : -25), 40, WORLD_SIZE - 40),
+                y: clamp(enemy.y + (i ? 15 : -15), 40, WORLD_SIZE - 40),
+                generation: enemy.generation + 1, hp: Math.max(1, enemy.maxHp * .4),
+                damage: Math.max(1, Math.round(enemy.damage * .6)), speed: enemy.speed * 1.08,
+                reward: enemy.reward * .24, summoned: enemy.summoned });
+        }
+        worldRing(enemy.x, enemy.y, 48, "#8eff9b", .3);
+    }
+    showFloat(enemy.x, enemy.y - 20, `+${xp} XP · ${gold} 🪙`, "#d3b8ff");
+    checkLevelUp();
+}
+
+function checkLevelUp() {
+    while (player.xp >= player.xpNeeded) {
+        player.xp -= player.xpNeeded; player.level++;
+        player.xpNeeded = Math.floor(player.xpNeeded * 1.35);
+        player.skillPoints++;
+        player.maxHp += 10; player.maxMana += 10; player.magic += 3;
+        player.hp = player.maxHp; player.mana = player.maxMana;
+        const unlocked = Object.values(powers).find(p => p.requiredLevel === player.level);
+        showMessage(`🌟 ¡NIVEL ${player.level}! +1 punto${unlocked ? " · " + unlocked.name + " desbloqueado" : ""}`, 2, 2000);
+    }
+}
+
+function dash() {
+    if (gameState !== "playing" || player.invincible || player.dashCooldown > 0) return;
+    let dx = Number(!!(keys.d || keys.arrowright || touchKeys.d)) - Number(!!(keys.a || keys.arrowleft || touchKeys.a));
+    let dy = Number(!!(keys.s || keys.arrowdown || touchKeys.s)) - Number(!!(keys.w || keys.arrowup || touchKeys.w));
+    if (!dx && !dy) { dx = facing.x; dy = facing.y; }
+    const len = Math.max(1, Math.hypot(dx, dy)); dx /= len; dy /= len;
+    const nearby = enemies.filter(e => distance(player.x, player.y, e.x, e.y) <= 125);
+    const incoming = projectiles.some(p => p.owner === "enemy" && distance(player.x, player.y, p.x, p.y) < 100);
+    const perfect = nearby.length > 0 || incoming;
+    player.invincible = true; player.invincibleTime = .43;
+    player.dashCooldown = Math.max(800, 1600 - player.shopUpgrades.speed * 75);
+    const x = player.x, y = player.y;
+    player.x = clamp(player.x + dx * 200, 50, WORLD_SIZE - 50);
+    player.y = clamp(player.y + dy * 200, 50, WORLD_SIZE - 50);
+    beam(x, y, player.x, player.y, "#ccadff");
+    if (perfect) {
+        player.perfectDodges++; player.mana = Math.min(player.maxMana, player.mana + 12);
+        for (const enemy of nearby) damageEnemy(enemy, 24 + player.level * 5);
+        showMessage("✨ ¡ESQUIVA PERFECTA! +12 maná", 1, 900);
+    }
+}
+
+function upgradeStat(type) {
+    if (!["playing", "intermission", "paused"].includes(gameState) || !["magic", "hp", "mana", "haste"].includes(type)) return;
+    if (!player.skillPoints) { showMessage("✨ No tienes puntos", 1); return; }
+    player.skillPoints--;
+    if (type === "magic") player.magic += 10;
+    if (type === "hp") { player.maxHp += 20; player.hp = player.maxHp; }
+    if (type === "mana") { player.maxMana += 25; player.mana = player.maxMana; }
+    if (type === "haste") player.hastePoints++;
+    showMessage(type === "haste" ? "⚡ Cadencia +8%: armas y magia más rápidas" : "✨ Habilidad mejorada", 1);
+    updateHUD(); saveGame();
+}
+
+function equipWeapon(id) {
+    if (!["playing", "intermission", "paused"].includes(gameState) || !weapons[id]) return;
+    player.weapon = id; player.swordCombo = 0; player.comboTime = 0; player.axeCombo = 0;
+    showMessage(`⚔️ ${weapons[id].name}`, 1);
+    updateHUD(); saveGame();
+}
+
+function equipPower(id) {
+    if (!["playing", "intermission", "paused"].includes(gameState) || !powers[id]) return;
+    if (player.level < powers[id].requiredLevel) { showMessage(`🔒 Necesitas nivel ${powers[id].requiredLevel}`); return; }
+    player.power = id;
+    held.magic = false; aim.active = false;
+    showMessage(id === "ice" ? "❄️ Hielo: apunta con cursor / arrastra PODER" : `✨ ${powers[id].name}`, 1, 1700);
+    updateHUD(); saveGame();
+}
+
+function showFloat(x, y, text, color) {
+    if (world.querySelectorAll(".world-float").length >= 32) return;
+    const element = document.createElement("div");
+    element.className = "world-float"; element.textContent = text;
+    element.style.cssText = `left:${x}px;top:${y}px;color:${color}`;
+    world.appendChild(element);
+    effects.push({ element, life: .7, maxLife: .7 });
+}
+function showDamage(enemy, damage) { showFloat(enemy.x, enemy.y - 45, `-${Math.floor(damage)}`, "#ffe66d"); }
+function showMessage(text, priority = 0, duration = 1200) {
+    if (priority < messagePriority && performance.now() < messageUntil) return;
+    $("message").textContent = text;
+    messagePriority = priority; messageUntil = performance.now() + duration;
+    clearTimeout(messageTimer);
+    messageTimer = setTimeout(() => { $("message").textContent = ""; messagePriority = 0; }, duration);
+}
+
+function updateCamera() {
+    world.style.left = (innerWidth / 2 - player.x) + "px";
+    world.style.top = (innerHeight / 2 - player.y) + "px";
+    if (aim.screenX !== null && !aim.active) setAimFromScreen(aim.screenX, aim.screenY);
+    const visible = gameState === "playing" && player.power === "ice" && aim.valid;
+    $("aimGuide").classList.toggle("hidden", !visible);
+    document.body.classList.toggle("ice-equipped", gameState === "playing" && player.power === "ice");
+    if (visible) {
+        const angle = Math.atan2(aim.y, aim.x);
+        $("aimGuide").style.cssText = `left:${player.x}px;top:${player.y}px;transform:rotate(${angle}rad)`;
+    }
+}
+
+function updateHUD() {
+    $("levelText").textContent = "Nivel " + player.level;
+    $("waveText").textContent = wave > 0 ? `🌊 Oleada ${wave} · ${Math.max(0, waveQuota - waveSpawned) + enemies.length} restantes` : "🌊 Preparado para la oleada 1";
+    for (const [id, value] of Object.entries({ goldText: Math.floor(player.gold), killsText: player.kills,
+        magicText: player.magic, rebirthText: player.rebirths, skillPointsText: player.skillPoints,
+        weaponText: weapons[player.weapon].name, powerText: powers[player.power].name,
+        petText: petLevel() ? `${petCatalog[player.pet].name} Nv.${petLevel()}${player.pet === "golem" ? " · 🛡 " + Math.ceil(player.petShield) : ""}` : "Ninguna",
+        dodgesText: player.perfectDodges })) $(id).textContent = value;
+    $("hpFill").style.width = clamp(player.hp / player.maxHp * 100, 0, 100) + "%";
+    $("manaFill").style.width = clamp(player.mana / player.maxMana * 100, 0, 100) + "%";
+    $("xpFill").style.width = clamp(player.xp / player.xpNeeded * 100, 0, 100) + "%";
+    $("hpValue").textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+    $("manaValue").textContent = `${Math.floor(player.mana)} / ${player.maxMana}`;
+    $("techniqueInfo").textContent = weapons[player.weapon].technique;
+    $("powerInfo").textContent = powers[player.power].detail;
+    $("bonusInfo").textContent = `♻️ Daño +${player.rebirths * 30}% · XP +${player.rebirths * 10}% · Cadencia +${Math.round((attackRate() - 1) * 100)}%`;
+    $("nextRebirthInfo").textContent = `Próximo renacimiento: superar oleada ${rebirthRequirement()}`;
+    $("recordInfo").textContent = `🏆 Récord: oleada ${player.bestWave} · Jefes: ${player.bossesKilled}`;
+    for (const [id, p] of Object.entries(powers)) {
+        const button = $("power-" + id);
+        button.disabled = player.level < p.requiredLevel;
+        button.classList.toggle("selected", player.power === id);
+    }
+    for (const id of Object.keys(weapons)) $("weapon-" + id).classList.toggle("selected", player.weapon === id);
+    $("unlockInfo").textContent = Object.values(powers).filter(p => p.requiredLevel > 1)
+        .map(p => `${player.level >= p.requiredLevel ? "✓" : "🔒"} ${p.name}: nivel ${p.requiredLevel}`).join("\n");
+    const boss = enemies.find(e => e.boss);
+    $("bossHud").classList.toggle("hidden", !boss || gameState !== "playing");
+    if (boss) {
+        $("bossName").textContent = boss.boss.name + (boss.phase === 2 ? " · FASE II" : "");
+        $("bossFill").style.width = Math.max(0, boss.hp / boss.maxHp * 100) + "%";
+        $("bossPhase").textContent = boss.phase === 2 ? (boss.boss.summon ? "Subordinados invocados · magia acelerada" : "Furia: patrones más densos") : boss.boss.summon ? "A media vida invoca subordinados" : "A media vida entra en furia";
+    }
+    const attackButton = document.querySelector('[data-mobile-action="attack"]');
+    const magicButton = document.querySelector('[data-mobile-action="magic"]');
+    const dashButton = document.querySelector('[data-mobile-action="dash"]');
+    attackButton.querySelector(".control-hint").textContent = player.weapon === "sword" && player.comboTime > 0 ? `COMBO ${player.swordCombo}/3` : "MANTENER / SPACE";
+    magicButton.querySelector(".control-hint").textContent = player.power === "ice" ? "ARRASTRAR / APUNTAR" : "MANTENER / CLICK";
+    dashButton.querySelector(".control-hint").textContent = player.dashCooldown > 0 ? (player.dashCooldown / 1000).toFixed(1) + " s" : "LISTA / SHIFT";
+    for (const [button, remaining, total] of [[attackButton, player.attackCooldown, weapons[player.weapon].cooldown / attackRate()],
+        [magicButton, player.magicCooldown, powers[player.power].cooldown / attackRate()], [dashButton, player.dashCooldown, 1600]]) {
+        button.style.setProperty("--cooldown", clamp(remaining / total, 0, 1));
+    }
+}
+
+function clearEnemies() {
+    for (const enemy of enemies) { if (enemy.cast) enemy.cast.element.remove(); enemy.element.remove(); }
+    enemies = [];
+}
+function clearCombat() {
+    clearEnemies();
+    for (const p of projectiles) p.element.remove();
+    for (const effect of effects) effect.element.remove();
+    projectiles = []; effects = [];
+    $("bossHud").classList.add("hidden");
+    resetInput();
+}
+function hideMenu() { mainMenu.style.display = "none"; }
+function hidePause() { pauseScreen.style.display = "none"; }
+function hideGameOver() { gameOverScreen.style.display = "none"; }
+
+function startNewGame() {
+    if (readSaveRaw() && !confirm("¿Crear una nueva partida? La partida guardada será reemplazada.")) return;
+    clearCombat(); resetPlayer(); wave = 0;
+    hideMenu(); hideGameOver(); hidePause();
+    startWave();
+}
+function continueGame() {
+    if (!loadGame()) { showMessage("💾 No hay una partida válida guardada", 1); return; }
+    clearCombat(); hideMenu(); hidePause(); hideGameOver();
+    if (loadedStage === "intermission" && wave > 0) {
+        gameState = "intermission"; waveQuota = waveSpawned = 0;
+        $("waveShop").classList.remove("hidden"); renderShop(); updateHUD();
+    } else { if (wave < 1) wave = 1; startWave(true); }
+}
+
+function handleGameOver() {
+    gameState = "gameover"; resetInput();
+    $("finalWave").textContent = wave; $("finalLevel").textContent = player.level;
+    $("finalKills").textContent = player.kills; $("finalRebirths").textContent = player.rebirths;
+    gameOverScreen.style.display = "flex"; saveGame(); updateHUD();
+}
+function respawnPlayer() {
+    player.x = CENTER; player.y = CENTER; player.hp = player.maxHp; player.mana = player.maxMana;
+    player.invincible = false; player.invincibleTime = player.hitCooldown = 0;
+    player.attackCooldown = player.magicCooldown = player.dashCooldown = 0;
+    hideGameOver(); startWave(true);
+    showMessage("💖 ¡De vuelta a la batalla!", 1);
+}
+function rebirth() {
+    const required = rebirthRequirement();
+    if (gameState !== "intermission") {
+        showMessage("♻️ Completa la oleada y abre el renacimiento en la tienda", 2, 2200);
+        return;
+    }
+    if (wave < required) {
+        $("rebirthProgress").textContent = `♻️ Para renacer debes superar la oleada ${required}. Última completada: ${wave}.`;
+        return;
+    }
+    // La confirmación forma parte del juego y no depende de ventanas del navegador.
+    showModal(`♻️ Renacimiento #${player.rebirths + 1}`, `
+        <p>Ya superaste la oleada ${required}. Puedes comenzar una nueva vida.</p>
+        <p><strong>Ganas:</strong> +30% de daño, +10% de XP por monstruo y +20 de vida máxima permanente.</p>
+        <p><strong>Conservas:</strong> tus mascotas, sus niveles, tus récords y las esquivas perfectas.</p>
+        <p><strong>Reinicias:</strong> nivel, oro, oleadas y mejoras compradas durante esta vida.</p>
+        <p>El siguiente renacimiento requerirá superar la oleada ${required + 5}.</p>
+        <button id="confirmRebirthButton" type="button" class="close-button rebirth-confirm" onclick="confirmRebirth()">♻️ CONFIRMAR RENACIMIENTO</button>
+        <p class="technique-note">Pulsa CERRAR si prefieres seguir con tu vida actual.</p>`);
+}
+function confirmRebirth() {
+    if (infoModal.classList.contains("hidden") || !$("confirmRebirthButton") || gameState !== "intermission" || wave < rebirthRequirement()) return;
+    closeModal();
+    const keep = { rebirths: player.rebirths + 1, petsOwned: [...player.petsOwned], petLevels: { ...player.petLevels },
+        pet: player.pet, perfectDodges: player.perfectDodges, bestWave: player.bestWave, bossesKilled: player.bossesKilled };
+    clearCombat(); resetPlayer(); Object.assign(player, keep);
+    player.maxHp = player.hp = 100 + player.rebirths * 20;
+    player.magic = 10 + player.rebirths * 3;
+    wave = 0; startWave();
+    showMessage(`♻️ Renacimiento ${player.rebirths} · +${player.rebirths * 30}% daño · +${player.rebirths * 10}% XP`, 3, 2600);
+    saveGame();
+}
+
+function togglePause() {
+    if (gameState === "playing") {
+        gameState = "paused"; resetInput(); pauseScreen.style.display = "flex"; updateHUD();
+    } else if (gameState === "paused" && infoModal.classList.contains("hidden")) resumeGame();
+}
+function resumeGame() {
+    if (gameState !== "paused") return;
+    gameState = "playing"; hidePause(); lastTime = performance.now();
+}
+function backToMenu() {
+    saveGame(); gameState = "menu"; resetInput(); hidePause(); hideGameOver();
+    $("waveShop").classList.add("hidden"); mainMenu.style.display = "flex"; updateMenuSaveText(); updateHUD();
+}
+
+function readSaveRaw() { try { return localStorage.getItem(SAVE_KEY); } catch { return null; } }
+function saveGame() {
+    const data = { version: 6, wave, stage: gameState === "intermission" ? "intermission" : "playing",
+        lastWaveReward, lastWaveFlawless, player: { ...player, invincible: false, invincibleTime: 0, hitCooldown: 0,
+            attackCooldown: 0, magicCooldown: 0, swordCombo: 0, comboTime: 0 }, savedAt: new Date().toLocaleString("es-AR") };
+    try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data)); $("saveStatus").textContent = "💾 Guardado";
+    } catch { $("saveStatus").textContent = "💾 El navegador no permitió guardar"; }
+}
+
+function loadGame() {
+    try {
+        const data = JSON.parse(readSaveRaw());
+        if (!data || !data.player || typeof data.player !== "object") return false;
+        const saved = data.player;
+        resetPlayer();
+        wave = count(data.wave);
+        for (const field of ["gold", "kills", "skillPoints", "rebirths", "weaponBonus", "hastePoints", "perfectDodges", "bestWave", "bossesKilled"]) player[field] = count(saved[field]);
+        player.level = Math.max(1, count(saved.level, 1));
+        player.x = clamp(numberOr(saved.x, CENTER), 50, WORLD_SIZE - 50);
+        player.y = clamp(numberOr(saved.y, CENTER), 50, WORLD_SIZE - 50);
+        player.speed = clamp(numberOr(saved.speed, 300), 100, 1800);
+        player.maxHp = Math.max(1, numberOr(saved.maxHp, 100 + player.rebirths * 20));
+        player.maxMana = Math.max(1, numberOr(saved.maxMana, 100));
+        player.hp = clamp(numberOr(saved.hp, player.maxHp), 0, player.maxHp);
+        if (player.hp <= 0) player.hp = player.maxHp;
+        player.mana = clamp(numberOr(saved.mana, player.maxMana), 0, player.maxMana);
+        player.xpNeeded = Math.max(1, numberOr(saved.xpNeeded, 100));
+        player.xp = Math.max(0, numberOr(saved.xp, 0));
+        player.magic = Math.max(1, numberOr(saved.magic, 10));
+        player.weapon = weapons[saved.weapon] ? saved.weapon : "sword";
+        player.power = powers[saved.power] && player.level >= powers[saved.power].requiredLevel ? saved.power : "fire";
+        player.petsOwned = Array.isArray(saved.petsOwned) ? [...new Set(saved.petsOwned.filter(id => !!petCatalog[id]))] : [];
+        player.pet = petCatalog[saved.pet] ? saved.pet : "none";
+        if (player.pet !== "none" && !player.petsOwned.includes(player.pet)) player.petsOwned.push(player.pet);
+        for (const id of player.petsOwned) player.petLevels[id] = clamp(count(saved.petLevels?.[id], 1), 1, 40);
+        for (const type of Object.keys(player.shopUpgrades)) player.shopUpgrades[type] = count(saved.shopUpgrades?.[type]);
+        player.weaponBonus = Math.max(player.weaponBonus, player.shopUpgrades.damage);
+        player.bestWave = Math.max(player.bestWave, data.stage === "intermission" ? wave : Math.max(0, wave - 1));
+        loadedStage = data.stage === "intermission" ? "intermission" : "playing";
+        lastWaveReward = count(data.lastWaveReward, 35 + wave * 15); lastWaveFlawless = !!data.lastWaveFlawless;
+        return true;
+    } catch { return false; }
+}
+function updateMenuSaveText() {
+    let data;
+    try { data = JSON.parse(readSaveRaw()); } catch { data = null; }
+    const valid = !!data?.player;
+    $("continueButton").disabled = !valid; $("continueButton").style.opacity = valid ? "1" : ".4";
+    $("menuSaveText").textContent = valid ? `Partida encontrada · Oleada ${count(data.wave)} · Nivel ${count(data.player.level, 1)} · Renacimientos ${count(data.player.rebirths)}` : "No hay ninguna partida guardada.";
+}
+
+function showSaveInfo() {
+    try {
+        const data = JSON.parse(readSaveRaw());
+        if (!data?.player) { showModal("💾 Partida", "<p>No hay ninguna partida guardada.</p>"); return; }
+        const p = data.player;
+        showModal("💾 Partida guardada", `<p>🌊 Oleada ${count(data.wave)} · Nivel ${count(p.level, 1)}</p>
+            <p>🪙 Oro: ${count(p.gold)} · Enemigos derrotados: ${count(p.kills)}</p>
+            <p>♻️ Renacimientos: ${count(p.rebirths)} · +${count(p.rebirths) * 30}% daño · +${count(p.rebirths) * 10}% XP</p>
+            <p>⚔️ ${weapons[p.weapon]?.name || "Espada"} · ✨ ${powers[p.power]?.name || "Bola de Fuego"}</p>
+            <p>🐾 ${petCatalog[p.pet]?.name || "Ninguna"}${petCatalog[p.pet] ? " · Nivel " + Math.max(1, count(p.petLevels?.[p.pet], 1)) : ""}</p>
+            <p>Próximo renacimiento: superar la oleada ${(count(p.rebirths) + 1) * 5}.</p>`);
+    } catch { showModal("💾 Partida", "<p>La partida guardada no es válida.</p>"); }
+}
+function showHelp() {
+    showModal("❓ Controles y técnicas", `<p><strong>PC:</strong> WASD o flechas para moverte; mantén SPACE para atacar; clic en el campo para lanzar magia (mantén para repetir); SHIFT para esquivar; ESC para pausar.</p>
+        <p><strong>Móvil:</strong> joystick izquierdo y botones derechos. Mantén ATAQUE o PODER para repetir. Con hielo, arrastra PODER en la dirección deseada y suelta para disparar; también puedes tocar directamente un punto del campo.</p>
+        <p><strong>❄️ Hielo:</strong> es la única magia manual. Vuela recto y puede fallar. Congela 2,4 s; a jefes, 0,85 s. La guía azul muestra la dirección.</p>
+        <p><strong>⚡ Rayo:</strong> hasta tres enemigos distintos, con saltos de hasta 235 píxeles. Paraliza 1,35 s; a jefes, 0,5 s.</p>
+        ${Object.entries(weapons).map(([id, w]) => `<p><strong>${w.name}:</strong> ${w.technique}</p>`).join("")}
+        <p><strong>Cadencia:</strong> mejora la velocidad de ataques y magia. Puedes comprarla con oro o puntos de habilidad.</p>
+        <p><strong>Esquiva perfecta:</strong> esquiva junto a enemigos o proyectiles para recuperar maná y contraatacar.</p>
+        <p><strong>Oleadas:</strong> elimina también crías y subordinados. Completa una oleada sin perder vida para ganar oro extra. Compra mejoras antes de seguir.</p>
+        <p><strong>Renacimientos:</strong> tras superar 5, 10, 15… oleadas en cada nueva vida. En la tienda pulsa RENACER y luego CONFIRMAR RENACIMIENTO dentro del juego. Cada uno añade +30% de daño, +10% de XP por monstruo y +20 de vida. Se conservan mascotas, sus mejoras y récords.</p>
+        <p><strong>Mascotas:</strong> nivel 1 = potencia ×1; nivel 2 = ×2; nivel 3 = ×4. Cada mejora duplica daño, curación o escudo, pero cuesta 10 veces más que la anterior. La primera mejora cuesta 10 veces el precio de compra.</p>
+        <p><strong>Enemigos por oleada:</strong> 8 en la primera; 10 en la segunda; luego 11, 12… hasta un máximo de 20 enemigos de base. Los slimes y jefes conservan sus divisiones e invocaciones. Sus niveles aumentan de 4 en 4: nivel 1, 5, 9, 13…</p>
+        <p><strong>Guardado:</strong> automático entre oleadas y durante la partida. Si sales en la tienda, continúas allí; si sales en combate, reintentas esa oleada conservando tus mejoras.</p>`);
+}
+function showBestiary() {
+    showModal("📖 Grimorio de las sombras", Object.entries(enemyCatalog).map(([id, e]) => `<p><strong>${e.name} · Oleada ${e.from}+</strong><br>${e.detail}</p>`).join("") +
+        `<hr><p><strong>Jefes cada 5 oleadas</strong><br>El patrón se anuncia desde la posición del jefe. Esquiva los proyectiles y sal de las zonas marcadas.</p>` +
+        bossCatalog.map((b, i) => `<p><strong>${b.name} · Oleada ${5 + i * 5}, ${20 + i * 5}…</strong><br>${b.detail}</p>`).join(""));
+}
+function showModal(title, content) {
+    modalPaused = gameState === "playing";
+    if (modalPaused) { gameState = "paused"; resetInput(); }
+    $("modalTitle").textContent = title; $("modalContent").innerHTML = content; infoModal.classList.remove("hidden");
+}
+function closeModal() {
+    infoModal.classList.add("hidden");
+    if (modalPaused && gameState === "paused") { gameState = "playing"; lastTime = performance.now(); }
+    modalPaused = false;
+}
+
+function startWave(repeatCurrent = false) {
+    if (!repeatCurrent) wave++;
+    wave = Math.max(1, wave);
+    waveQuota = wave === 1 ? 8 : Math.min(20, wave + 8); waveSpawned = 0;
+    enemySpawnTimer = .9; damageTakenThisWave = 0;
+    clearCombat(); gameState = "playing";
+    player.swordCombo = 0; player.comboTime = 0;
+    player.attackCooldown = player.magicCooldown = player.dashCooldown = player.hitCooldown = 0;
+    player.invincible = false; player.invincibleTime = 0;
+    petAttackTimer = petUtilityTimer = 0;
+    player.petShield = player.pet === "golem" ? 22 * petPower() : 0;
+    $("waveShop").classList.add("hidden"); hideGameOver(); hidePause();
+    document.body.classList.remove("mobile-panel-open"); $("panelToggle").textContent = "⚙️ Menú"; $("panelToggle").setAttribute("aria-expanded", "false");
+    showMessage(wave % 5 === 0 ? `☠️ OLEADA ${wave} · Un jefe te espera` : `🌊 OLEADA ${wave} · ¡Sin perder vida ganas más oro!`, 2, 2000);
+    saveGame(); updateHUD();
+}
+function maintainEnemies(dt) {
+    if (gameState !== "playing" || waveQuota <= 0) return;
+    enemySpawnTimer += dt;
+    const limit = Math.min(13, 4 + Math.floor(wave / 2));
+    const delay = Math.max(.38, 1 - wave * .023);
+    if (waveSpawned < waveQuota && enemies.length < limit && enemySpawnTimer >= delay) {
+        enemySpawnTimer = 0;
+        const finalBoss = wave % 5 === 0 && waveSpawned === waveQuota - 1;
+        const newKind = !finalBoss && waveSpawned === 0 ? Object.keys(enemyCatalog).find(id => enemyCatalog[id].from === wave) : null;
+        const spawned = spawnEnemy(finalBoss, newKind ? { kind: newKind } : {});
+        if (spawned) waveSpawned++;
+    }
+    if (waveSpawned >= waveQuota && enemies.length === 0) finishWave();
+}
+function finishWave() {
+    if (gameState !== "playing") return;
+    gameState = "intermission"; resetInput();
+    lastWaveFlawless = damageTakenThisWave === 0;
+    lastWaveReward = 35 + wave * 15 + (lastWaveFlawless ? 25 + wave * 5 : 0);
+    player.gold += lastWaveReward;
+    player.bestWave = Math.max(player.bestWave, wave);
+    player.hp = Math.min(player.maxHp, player.hp + Math.ceil(player.maxHp * .2));
+    player.mana = Math.min(player.maxMana, player.mana + Math.ceil(player.maxMana * .25));
+    // Nada queda activo detrás de la tienda ni se arrastra a otra oleada.
+    for (const p of projectiles) p.element.remove(); projectiles = [];
+    for (const effect of effects) effect.element.remove(); effects = [];
+    $("waveShop").classList.remove("hidden"); renderShop(); saveGame(); updateHUD();
+}
+function upgradeCost(type) {
+    const level = player.shopUpgrades[type] || 0;
+    return ({ damage: 65, hp: 50, mana: 45, speed: 60, haste: 80 }[type] || 50) + level * ({ damage: 58, hp: 43, mana: 38, speed: 48, haste: 65 }[type] || 40);
+}
+function petDescription(id, power = petPower(id)) {
+    if (id === "wolf") return `Mordisco de ${Math.round((12 + player.level * 3 + wave * 2) * power)} de daño base cada 1,25 s. Recibe tus bonus de daño.`;
+    if (id === "fairy") return `Recupera ${Math.max(3, Math.round(player.maxHp * .035)) * power} de vida y ${5 * power} de maná cada 3,2 s.`;
+    return `Escudo de ${22 * power} que se recarga cada 5 s, y resistencia base del 22%. La mejora duplica el escudo.`;
+}
+function renderShop() {
+    $("shopSummary").textContent = `Oleada ${wave} superada · +${lastWaveReward} oro${lastWaveFlawless ? " · ✨ PERFECTA: bonus incluido" : ""} · Disponible: 🪙 ${Math.floor(player.gold)}`;
+    const labels = { damage: "⚔️ Daño +7%", hp: "❤️ Vida máxima +25 y curación", mana: "💧 Maná máximo +25 y recarga",
+        speed: "💨 Velocidad +15 y esquiva más rápida", haste: "⚡ Cadencia +12% · armas y magia" };
+    const buttons = { damage: "shopDamage", hp: "shopHp", mana: "shopMana", speed: "shopSpeed", haste: "shopHaste" };
+    for (const type of Object.keys(labels)) {
+        const button = $(buttons[type]);
+        button.textContent = `${labels[type]} (${upgradeCost(type)} oro) · Nv.${player.shopUpgrades[type]}`;
+        button.disabled = player.gold < upgradeCost(type);
+    }
+    for (const [id, pet] of Object.entries(petCatalog)) {
+        const button = $("pet" + id[0].toUpperCase() + id.slice(1));
+        const level = petLevel(id);
+        button.textContent = `${pet.emoji} ${pet.name} · ${level ? `Nv.${level} · ${player.pet === id ? "EQUIPADA" : "EQUIPAR GRATIS"}` : `Comprar (${pet.cost} oro)`}`;
+        button.disabled = !level && player.gold < pet.cost;
+        button.classList.toggle("selected", player.pet === id);
+    }
+    const id = player.pet;
+    $("petDescription").textContent = petLevel() ? `${petCatalog[id].emoji} Potencia ×${petPower()}. ${petDescription(id)}` : "Lobo: daño · Hada: vida y maná · Gólem: escudo y resistencia.";
+    const upgradeButton = $("petUpgrade");
+    upgradeButton.classList.toggle("hidden", !petLevel());
+    if (petLevel()) {
+        upgradeButton.textContent = `⬆️ ${petCatalog[id].name} Nv.${petLevel()} → ${petLevel() + 1} · Potencia ×${petPower()} → ×${petPower() * 2} (${petUpgradeCost(id)} oro)`;
+        upgradeButton.disabled = player.gold < petUpgradeCost(id);
+        $("petNextInfo").textContent = `Siguiente nivel: ${petDescription(id, petPower() * 2)} Cada mejora duplica la potencia y multiplica el costo por 10. La mejora posterior costará ${petUpgradeCost(id) * 10} oro.`;
+    } else $("petNextInfo").textContent = "Las mascotas y todos sus niveles se conservan al renacer.";
+    const required = rebirthRequirement();
+    $("rebirthButton").classList.remove("hidden");
+    $("rebirthButton").disabled = wave < required;
+    $("rebirthButton").textContent = wave < required ? `🔒 RENACER #${player.rebirths + 1} · Supera la oleada ${required}` : `♻️ RENACER #${player.rebirths + 1} · +30% daño / +10% XP`;
+    $("rebirthProgress").textContent = `♻️ Renacimiento #${player.rebirths + 1}: ${wave >= required ? "¡Disponible!" : "supera la oleada " + required} · Bonus actual: +${player.rebirths * 30}% daño, +${player.rebirths * 10}% XP. Después necesitarás la oleada ${required + 5}.`;
+    const next = wave + 1;
+    const nextEnemy = Object.values(enemyCatalog).find(e => e.from === next);
+    $("nextWaveInfo").textContent = next % 5 === 0 ? `☠️ Próxima oleada ${next}: ${bossCatalog[(Math.floor(next / 5) - 1) % 3].name}. ¡Prepárate para sus patrones!` :
+        nextEnemy ? `📖 Oleada ${next}: aparece ${nextEnemy.name}. ${nextEnemy.detail}` : next === 10 ? "Los acechadores se vuelven translúcidos." : `🌊 Próxima oleada ${next}: sus habilidades mejoran. ${next >= 10 ? "Cuidado con los acechadores translúcidos." : "Prueba otra combinación de arma y magia."}`;
+}
+function buyUpgrade(type) {
+    if (gameState !== "intermission" || !Object.hasOwn(player.shopUpgrades, type)) return;
+    const cost = upgradeCost(type);
+    if (player.gold < cost) return;
+    player.gold -= cost; player.shopUpgrades[type]++;
+    if (type === "damage") player.weaponBonus++;
+    if (type === "hp") { player.maxHp += 25; player.hp = Math.min(player.maxHp, player.hp + 35); }
+    if (type === "mana") { player.maxMana += 25; player.mana = player.maxMana; }
+    if (type === "speed") player.speed += 15;
+    renderShop(); updateHUD(); saveGame();
+}
+function buyPet(id) {
+    if (gameState !== "intermission" || !petCatalog[id]) return;
+    if (!player.petsOwned.includes(id)) {
+        if (player.gold < petCatalog[id].cost) return;
+        player.gold -= petCatalog[id].cost; player.petsOwned.push(id); player.petLevels[id] = 1;
+    }
+    player.pet = id;
+    petAttackTimer = petUtilityTimer = 0;
+    player.petShield = id === "golem" ? 22 * petPower(id) : 0;
+    renderShop(); updateHUD(); saveGame();
+}
+function upgradePet() {
+    if (gameState !== "intermission" || !petLevel()) return;
+    const cost = petUpgradeCost(player.pet);
+    if (!Number.isSafeInteger(cost) || player.gold < cost) return;
+    player.gold -= cost; player.petLevels[player.pet] = petLevel() + 1;
+    petAttackTimer = petUtilityTimer = 0;
+    if (player.pet === "golem") player.petShield = 22 * petPower();
+    renderShop(); updateHUD(); saveGame();
+}
+function updatePet(dt) {
+    const element = $("petCompanion");
+    element.classList.toggle("hidden", !petLevel());
+    if (!petLevel()) return;
+    element.textContent = petCatalog[player.pet].emoji;
+    element.style.left = clamp(player.x + 62, 30, WORLD_SIZE - 60) + "px";
+    element.style.top = clamp(player.y + 30 + Math.sin(worldTime * 4) * 8, 30, WORLD_SIZE - 60) + "px";
+    element.style.setProperty("--pet-glow", Math.min(25, 7 + petLevel() * 3) + "px");
+    const power = petPower();
+    petAttackTimer -= dt; petUtilityTimer -= dt;
+    if (player.pet === "wolf" && petAttackTimer <= 0) {
+        const target = nearestEnemy(player.x, player.y, 440);
+        if (target) {
+            beam(player.x + 70, player.y + 45, target.x, target.y, "#b4cfff");
+            damageEnemy(target, (12 + player.level * 3 + wave * 2) * power);
+            petAttackTimer = 1.25;
+        } else petAttackTimer = .2;
+    }
+    if (player.pet === "fairy" && petUtilityTimer <= 0) {
+        player.hp = Math.min(player.maxHp, player.hp + Math.max(3, Math.round(player.maxHp * .035)) * power);
+        player.mana = Math.min(player.maxMana, player.mana + 5 * power);
+        worldRing(player.x, player.y, 48, "#8bffb5", .3); petUtilityTimer = 3.2;
+    }
+    if (player.pet === "golem" && petUtilityTimer <= 0) { player.petShield = 22 * power; petUtilityTimer = 5; }
+}
+
+function updateCooldowns(dt) {
+    for (const field of ["attackCooldown", "magicCooldown", "dashCooldown"]) player[field] = Math.max(0, player[field] - dt * 1000);
+    player.invincibleTime = Math.max(0, player.invincibleTime - dt);
+    player.hitCooldown = Math.max(0, player.hitCooldown - dt);
+    player.invincible = player.invincibleTime > 0;
+    player.comboTime = Math.max(0, player.comboTime - dt);
+    if (!player.comboTime) player.swordCombo = 0;
+    playerElement.classList.toggle("player-hit", player.invincible || player.hitCooldown > 0);
+}
+function stepGame(dt) {
+    if (gameState !== "playing") return;
+    worldTime += dt;
+    updateCooldowns(dt); updatePlayer(dt);
+    if (held.attack || keys[" "]) meleeAttack();
+    if (held.magic) magicAttack();
+    updateEnemies(dt);
+    if (gameState !== "playing") return;
+    updateProjectiles(dt);
+    if (gameState !== "playing") return;
+    updateEffects(dt);
+    if (gameState !== "playing") return;
+    player.mana = Math.min(player.maxMana, player.mana + 23 * dt);
+    updatePet(dt); maintainEnemies(dt);
+    autoSaveTimer += dt;
+    if (autoSaveTimer >= 15) { autoSaveTimer = 0; saveGame(); }
+}
+function gameLoop(now) {
+    const dt = clamp((now - lastTime) / 1000, 0, .05); lastTime = now;
+    stepGame(dt); updateCamera();
+    hudTimer += dt;
+    if (hudTimer >= .08) { updateHUD(); hudTimer = 0; }
+    requestAnimationFrame(gameLoop);
+}
+
+const mobileJoystick = $("mobileJoystick"), mobileStick = $("mobileStick");
+function resetMobileJoystick() {
+    joystickPointerId = null;
+    touchKeys = { w: false, a: false, s: false, d: false };
+    mobileStick.style.left = mobileStick.style.top = "50%";
+}
+function resetInput() {
+    keys = {}; held.attack = held.magic = false;
+    aim.active = false; actionPointer = null;
+    if (typeof mobileStick !== "undefined") resetMobileJoystick();
+}
+function setMobileDirection(event) {
+    const rect = mobileJoystick.getBoundingClientRect(), max = rect.width * .34;
+    let x = event.clientX - rect.left - rect.width / 2, y = event.clientY - rect.top - rect.height / 2;
+    const len = Math.hypot(x, y);
+    if (len > max) { x *= max / len; y *= max / len; }
+    touchKeys.a = x / max < -.18; touchKeys.d = x / max > .18;
+    touchKeys.w = y / max < -.18; touchKeys.s = y / max > .18;
+    mobileStick.style.left = `calc(50% + ${x}px)`; mobileStick.style.top = `calc(50% + ${y}px)`;
+}
+mobileJoystick.addEventListener("pointerdown", event => {
+    if (gameState !== "playing" || joystickPointerId !== null) return;
+    joystickPointerId = event.pointerId; mobileJoystick.setPointerCapture(event.pointerId);
+    setMobileDirection(event); event.preventDefault();
+});
+mobileJoystick.addEventListener("pointermove", event => {
+    if (event.pointerId === joystickPointerId) { setMobileDirection(event); event.preventDefault(); }
+});
+for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) mobileJoystick.addEventListener(type, event => {
+    if (event.pointerId === joystickPointerId) resetMobileJoystick();
+});
+function toggleMobilePanel() {
+    const open = document.body.classList.toggle("mobile-panel-open");
+    $("panelToggle").setAttribute("aria-expanded", String(open)); $("panelToggle").textContent = open ? "✕ Cerrar" : "⚙️ Menú";
+}
+function toggleMobileHud() {
+    const hidden = document.body.classList.toggle("mobile-hud-hidden");
+    $("hudToggle").setAttribute("aria-expanded", String(!hidden)); $("hudToggle").textContent = hidden ? "📊 Mostrar" : "📊 Ocultar";
+}
+function setAimFromScreen(x, y) {
+    const dx = x - innerWidth / 2, dy = y - innerHeight / 2, len = Math.hypot(dx, dy);
+    if (len > 12) { aim.x = dx / len; aim.y = dy / len; aim.valid = true; }
+}
+function isUi(event) { return !!event.target.closest("button, #hud, #rightPanel, #mobileJoystick, .overlay, #pauseScreen, #gameOver, #infoModal"); }
+
+document.querySelectorAll("[data-mobile-action]").forEach(button => {
+    button.addEventListener("pointerdown", event => {
+        if (gameState !== "playing" || event.button > 0 || actionPointer !== null) return;
+        event.preventDefault(); event.stopPropagation();
+        const action = button.dataset.mobileAction;
+        if (action === "dash") { dash(); return; }
+        button.setPointerCapture(event.pointerId);
+        actionPointer = { id: event.pointerId, action, x: event.clientX, y: event.clientY, manual: action === "magic" && player.power === "ice" && event.pointerType !== "mouse", dragged: false };
+        if (actionPointer.manual) {
+            aim.active = true; aim.valid = false; aim.screenX = aim.screenY = null;
+            showMessage("❄️ Arrastra hacia el enemigo y suelta", 1, 900);
+        } else if (action === "attack") { held.attack = true; meleeAttack(); }
+        else { held.magic = true; magicAttack(); }
+    });
+    button.addEventListener("pointermove", event => {
+        if (!actionPointer || actionPointer.id !== event.pointerId || !actionPointer.manual) return;
+        const dx = event.clientX - actionPointer.x, dy = event.clientY - actionPointer.y, len = Math.hypot(dx, dy);
+        if (len >= 10) { aim.x = dx / len; aim.y = dy / len; aim.valid = true; actionPointer.dragged = true; }
+        event.preventDefault();
+    });
+    button.addEventListener("pointerup", event => {
+        if (!actionPointer || actionPointer.id !== event.pointerId) return;
+        if (actionPointer.manual && actionPointer.dragged) magicAttack();
+        held.attack = held.magic = false; aim.active = false; actionPointer = null;
+    });
+    for (const type of ["pointercancel", "lostpointercapture"]) button.addEventListener(type, event => {
+        if (actionPointer?.id === event.pointerId) { held.attack = held.magic = false; aim.active = false; actionPointer = null; }
+    });
+});
+document.addEventListener("pointermove", event => {
+    if (event.pointerType === "mouse" && !isUi(event) && !aim.active) {
+        aim.screenX = event.clientX; aim.screenY = event.clientY; setAimFromScreen(event.clientX, event.clientY);
+    }
+});
+document.addEventListener("pointerdown", event => {
+    if (gameState !== "playing" || event.button > 0 || isUi(event)) return;
+    event.preventDefault();
+    setAimFromScreen(event.clientX, event.clientY);
+    if (event.pointerType === "mouse") { aim.screenX = event.clientX; aim.screenY = event.clientY; held.magic = true; }
+    magicAttack();
+});
+document.addEventListener("pointerup", event => { if (event.pointerType === "mouse" && actionPointer === null) held.magic = false; });
+document.addEventListener("pointercancel", () => { held.magic = false; });
+document.addEventListener("keydown", event => {
+    const key = event.key.toLowerCase(); keys[key] = true;
+    if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.code)) event.preventDefault();
+    if (event.code === "Space" && !event.repeat) meleeAttack();
+    if (event.key === "Shift" && !event.repeat) dash();
+    if (event.key === "Escape" && !event.repeat) {
+        if (!infoModal.classList.contains("hidden")) closeModal(); else togglePause();
+    }
+});
+document.addEventListener("keyup", event => { keys[event.key.toLowerCase()] = false; });
+document.addEventListener("contextmenu", event => event.preventDefault());
+infoModal.addEventListener("click", event => { if (event.target === infoModal) closeModal(); });
+window.addEventListener("blur", () => { resetInput(); if (gameState === "playing") togglePause(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden && gameState === "playing") togglePause(); });
+window.addEventListener("beforeunload", () => { if (["playing", "paused", "intermission"].includes(gameState)) saveGame(); });
+
+resetPlayer(); createStars(); updateMenuSaveText(); updateHUD(); updateCamera(); requestAnimationFrame(gameLoop);
+
+</script>
+</body>
+</html>
